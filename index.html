@@ -94,17 +94,17 @@
         function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); filaments.forEach(f=>{f.update(); f.draw();}); requestAnimationFrame(animate); }
         animate();
 
-        // 1:1 EXTERNAL LOADER LOGIC
-        // This pulls the script from your GitHub so you can update it without changing the website
-        const REMOTE_ENGINE = "https://vanta-dev-pages.github.io/Vanta/engine.js";
+        // 1:1 REVISED EXTERNAL ENGINE LOADER
+        // Loads the engine.js script directly from your GitHub repository branch
+        const ENGINE_RAW_URL = "https://raw.githubusercontent.com/Vanta-Dev-Pages/Vanta/Vanta/engine.js";
         
-        const loaderCode = `javascript:(function(){
-            const s = document.createElement('script');
-            s.src = '${REMOTE_ENGINE}?v=' + Date.now();
-            document.body.appendChild(s);
+        const loader = `javascript:(function(){
+            const script = document.createElement('script');
+            script.src = '${ENGINE_RAW_URL}?v=' + Date.now();
+            document.body.appendChild(script);
         })();`;
 
-        document.getElementById('vanta-tool').href = loaderCode;
+        document.getElementById('vanta-tool').href = loader;
     </script>
 </body>
 </html>
