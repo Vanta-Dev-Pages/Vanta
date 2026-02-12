@@ -50,24 +50,26 @@
         <a href="" class="cta-button" id="vanta-trigger">VANTA TRACKER</a>
     </section>
 
-    <script>
-        // Pointing to your live Cloudflare Pages deployment
-        const payloadUrl = "https://vanta-9bz.pages.dev/engine.js";
-        const injector = `javascript:(function(){const s=document.createElement('script');s.src='${payloadUrl}?v='+Date.now();document.body.appendChild(s);})();`;
-        
-        document.getElementById('vanta-trigger').href = injector;
+   <script>
+    // 1. Get Affiliate ID from URL or default
+    const params = new URLSearchParams(window.location.search);
+    const aff = params.get('aff') || 'TK0XQV';
 
-        // Background Animation
-        const c = document.getElementById('canvas');
-        const x = c.getContext('2d');
-        c.width = window.innerWidth; c.height = window.innerHeight;
-        function draw() {
-            x.fillStyle = 'rgba(10,10,10,0.1)'; x.fillRect(0,0,c.width,c.height);
-            x.fillStyle = '#0f8';
-            for(let i=0; i<20; i++) x.fillRect(Math.random()*c.width, Math.random()*c.height, 2, 2);
-            requestAnimationFrame(draw);
-        }
-        draw();
-    </script>
+    // 2. Define your Cloudflare Engine path
+    const engineUrl = "https://vanta-9bz.pages.dev/engine.js";
+
+    // 3. Create the simplified Injector (Points to your engine.js)
+    // This removes the need for "modalx.js" and loads your engine directly
+    const bookmarkletCode = `javascript:(function(){
+        window.VantaAff = '${aff}';
+        const s = document.createElement('script');
+        s.src = '${engineUrl}?v=' + Date.now();
+        document.body.appendChild(s);
+    })();`.replace(/\s+/g, ''); // Removes spaces for bookmarklet compatibility
+
+    // 4. Attach to button
+    document.getElementById('vanta-tool').href = bookmarkletCode;
+</script>
 </body>
 </html>
+
