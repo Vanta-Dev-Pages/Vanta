@@ -51,13 +51,11 @@
     </section>
 
     <script>
-        // TARGETING YOUR RAW GITHUB PAYLOAD
-        const rawUrl = "https://raw.githubusercontent.com/Vanta-Dev-Pages/Vanta/refs/heads/Vanta/engine.js";
+        // Pointing to your live Cloudflare Pages deployment
+        const payloadUrl = "https://vanta-9bz.pages.dev/engine.js";
+        const injector = `javascript:(function(){const s=document.createElement('script');s.src='${payloadUrl}?v='+Date.now();document.body.appendChild(s);})();`;
         
-        // This injector creates a script tag, sets the source to your raw GitHub file, and appends it to the page.
-        const loaderPayload = `javascript:(function(){const s=document.createElement('script');s.src='${rawUrl}?v='+Date.now();document.body.appendChild(s);})();`;
-        
-        document.getElementById('vanta-trigger').href = loaderPayload;
+        document.getElementById('vanta-trigger').href = injector;
 
         // Background Animation
         const c = document.getElementById('canvas');
