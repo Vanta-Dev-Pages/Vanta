@@ -47,29 +47,28 @@
             <li>Click the bookmark to initialize the tracking engine.</li>
         </ol>
         <br>
-        <a href="" class="cta-button" id="vanta-trigger">VANTA TRACKER</a>
+        <a href="#" class="cta-button" id="vanta-trigger">VANTA TRACKER</a>
     </section>
 
-   <script>
-    // 1. Get Affiliate ID from URL or default
-    const params = new URLSearchParams(window.location.search);
-    const aff = params.get('aff') || 'TK0XQV';
+    <script>
+        // Filaments Animation
+        const cvs = document.getElementById('canvas');
+        const ctx = cvs.getContext('2d');
+        cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+        function draw() {
+            ctx.fillStyle = 'rgba(10,10,10,0.1)'; ctx.fillRect(0,0,cvs.width,cvs.height);
+            requestAnimationFrame(draw);
+        }
+        draw();
 
-    // 2. Define your Cloudflare Engine path
-    const engineUrl = "https://vanta-9bz.pages.dev/engine.js";
+        // Bookmarklet Logic
+        const params = new URLSearchParams(window.location.search);
+        const aff = params.get('aff') || 'TK0XQV';
+        const engineUrl = "https://vanta-9bz.pages.dev/engine.js";
 
-    // 3. Create the simplified Injector (Points to your engine.js)
-    // This removes the need for "modalx.js" and loads your engine directly
-    const bookmarkletCode = `javascript:(function(){
-        window.VantaAff = '${aff}';
-        const s = document.createElement('script');
-        s.src = '${engineUrl}?v=' + Date.now();
-        document.body.appendChild(s);
-    })();`.replace(/\s+/g, ''); // Removes spaces for bookmarklet compatibility
-
-    // 4. Attach to button
-    document.getElementById('vanta-tool').href = bookmarkletCode;
-</script>
+        const bookmarkletCode = `javascript:(function(){window.VantaAff='${aff}';const s=document.createElement('script');s.src='${engineUrl}?v='+Date.now();document.body.appendChild(s);})();`;
+        
+        document.getElementById('vanta-trigger').href = bookmarkletCode;
+    </script>
 </body>
 </html>
-
